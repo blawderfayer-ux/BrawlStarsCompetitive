@@ -130,19 +130,19 @@ export default async function AdminTournamentSummary({ params }: { params: Promi
         </section>
       ) : null}
 
-      {tournament.status !== "live" && tournament.status !== "finished" ? (
+      {tournament.status ? (
         <section className="card space-y-2 p-4">
           <p className="font-extrabold">Otras acciones</p>
           <div className="flex flex-wrap gap-2">
-            {tournament.status !== "cancelled" ? (
+            {tournament.status !== "cancelled" && tournament.status !== "finished" ? (
               <ActionForm action={setTournamentStatusAction} confirm="¿Cancelar el torneo?">
                 <input type="hidden" name="id" value={tournament.id} />
                 <input type="hidden" name="status" value="cancelled" />
                 <SubmitButton className="btn-ghost btn-sm">Cancelar torneo</SubmitButton>
               </ActionForm>
             ) : null}
-            {tournament.status === "draft" || tournament.status === "cancelled" ? (
-              <ActionForm action={deleteTournamentAction} confirm="¿Eliminar el torneo y todas sus inscripciones? No se puede deshacer.">
+            {["draft", "cancelled", "finished"].includes(tournament.status) ? (
+              <ActionForm action={deleteTournamentAction} confirm="¿Eliminar el torneo con sus equipos, partidas y chats? No se puede deshacer.">
                 <input type="hidden" name="id" value={tournament.id} />
                 <SubmitButton className="btn-danger btn-sm">Eliminar torneo</SubmitButton>
               </ActionForm>
