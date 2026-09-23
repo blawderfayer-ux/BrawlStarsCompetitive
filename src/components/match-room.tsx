@@ -352,7 +352,7 @@ export function MatchRoom({
           onChange={(e) => setText(e.target.value)}
           rows={1}
           maxLength={600}
-          placeholder="Mensaje, link del equipo o código de sala…"
+          placeholder="Mensaje o link…"
           className="input !min-h-[44px] resize-none !py-2.5"
         />
         <button type="submit" className="btn btn-primary btn-sm !min-h-[44px] !px-3" aria-label="Enviar" disabled={sending}>
