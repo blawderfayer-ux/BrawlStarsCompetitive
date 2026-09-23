@@ -7,6 +7,7 @@ import {
   roundName,
   seedOrder,
   suggestRoundPlan,
+  randomSeriesPlan,
   repeatedModes,
   undoGame,
   walkover,
@@ -274,6 +275,43 @@ describe("suggestRoundPlan", () => {
   it("con pool vacío devuelve games sin mapa", () => {
     expect(suggestRoundPlan([], 3, 1)).toEqual([
       { modeId: null, mapId: null },
+      { modeId: null, mapId: null },
+      { modeId: null, mapId: null },
+    ]);
+  });
+});
+
+describe("randomSeriesPlan", () => {
+  const pool = [
+    { modeId: "gem", mapId: "g1" },
+    { modeId: "gem", mapId: "g2" },
+    { modeId: "ball", mapId: "b1" },
+    { modeId: "heist", mapId: "h1" },
+    { modeId: "ko", mapId: "k1" },
+    { modeId: "ko", mapId: "k2" },
+  ];
+
+  it("no repite modo dentro de una serie y usa mapas del pool", () => {
+    for (let i = 0; i < 200; i++) {
+      const plan = randomSeriesPlan(pool, 3);
+      expect(repeatedModes(plan)).toEqual([]);
+      for (const g of plan) expect(pool).toContainEqual({ modeId: g.modeId, mapId: g.mapId });
+    }
+  });
+
+  it("no siempre empieza con el mismo modo", () => {
+    const firsts = new Set(Array.from({ length: 200 }, () => randomSeriesPlan(pool, 1)[0].modeId));
+    expect(firsts.size).toBe(4);
+  });
+
+  it("si el BO es mayor que la cantidad de modos, repite lo mínimo", () => {
+    const plan = randomSeriesPlan(pool.filter((m) => m.modeId === "gem" || m.modeId === "ko"), 5);
+    expect(plan).toHaveLength(5);
+    expect(plan.every((g) => g.mapId)).toBe(true);
+  });
+
+  it("con pool vacío devuelve games sin mapa", () => {
+    expect(randomSeriesPlan([], 2)).toEqual([
       { modeId: null, mapId: null },
       { modeId: null, mapId: null },
     ]);

@@ -42,6 +42,7 @@ import {
   setMapPool,
   setTournamentStatus,
   updateRoundPlan,
+  rerollMaps,
   updateTournament,
   type SeedingMethod,
   type TournamentInput,
@@ -194,6 +195,13 @@ export async function updateRoundPlanAction(_prev: Result, form: FormData): Prom
   }, "Mapas de la ronda guardados.");
 }
 
+export async function rerollMapsAction(_prev: Result, form: FormData): Promise<ActionResult> {
+  return runAction(async () => {
+    const user = await requireStaff(["admin"]);
+    return rerollMaps(str(form, "id"), num(form, "round", 0) || null, user.id);
+  }, "Mapas sorteados de nuevo en las partidas que no empezaron.");
+}
+
 /* ─────────────── Inscripciones y equipos ─────────────── */
 
 export async function reviewRegistrationAction(_prev: Result, form: FormData): Promise<ActionResult> {
@@ -313,7 +321,7 @@ export async function seedCatalogAction(): Promise<ActionResult> {
     await requireStaff(["admin"]);
     const r = await seedCatalog();
     return r;
-  }, "Catálogo BSC 2026 cargado.");
+  }, "Catálogo actualizado: mapas en español y agregados al pool de los torneos que no empezaron.");
 }
 
 export async function saveModeAction(_prev: Result, form: FormData): Promise<ActionResult> {

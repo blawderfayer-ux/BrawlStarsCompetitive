@@ -1,9 +1,10 @@
+import { Shuffle } from "lucide-react";
 import { ActionForm, SubmitButton } from "@/components/action-form";
 import { MapSelect } from "@/components/admin/series-control";
 import { EmptyState, ModeMapChip } from "@/components/ui";
 import { requireStaffPage } from "@/lib/auth";
 import { roundName } from "@/lib/bracket";
-import { updateRoundPlanAction } from "@/app/admin/actions";
+import { rerollMapsAction, updateRoundPlanAction } from "@/app/admin/actions";
 import { loadAdminTournament } from "../data";
 
 /** Plan oficial de modo/mapa por ronda: lo que verán ambos equipos en cada game. */
@@ -15,8 +16,8 @@ export default async function RoundMapsPage({ params }: { params: Promise<{ slug
   if (!tournament.bracketGeneratedAt) {
     return (
       <EmptyState title="Primero genera el bracket">
-        Al generarlo se propone automáticamente un plan de mapas por ronda (sin repetir modo en una serie) usando el
-        pool del torneo. Aquí podrás cambiarlo. El pool se edita en Configuración.
+        Al generarlo, cada partida recibe modos y mapas al azar del pool del torneo (sin repetir modo dentro de la
+        serie). Aquí podrás volver a sortearlos o fijarlos. El pool se edita en Configuración.
       </EmptyState>
     );
   }
@@ -27,14 +28,23 @@ export default async function RoundMapsPage({ params }: { params: Promise<{ slug
 
   return (
     <div className="space-y-6">
-      <p className="text-sm text-muted">
-        Define qué modo y mapa se juega en cada game de cada ronda. Al guardar, se actualizan todas las partidas de esa
-        ronda que todavía no empezaron. Para cambiar el mapa de una sola partida usa “Horario, mapas y correcciones” en
-        Partidas.
-      </p>
+      <div className="card space-y-3 p-4">
+        <p className="text-sm text-muted">
+          Cada partida tiene sus propios modos y mapas sorteados al azar del pool del torneo, sin repetir modo dentro
+          de la serie. Puedes volver a sortear las partidas que todavía no empezaron, o fijar el mismo plan para toda
+          una ronda. Para cambiar el mapa de una sola partida usa “Horario, mapas y correcciones” en Partidas.
+        </p>
+        <ActionForm action={rerollMapsAction} confirm="¿Volver a sortear los mapas de todas las partidas que no empezaron?">
+          <input type="hidden" name="id" value={tournament.id} />
+          <SubmitButton className="btn-primary btn-sm" pendingText="Sorteando…">
+            <Shuffle size={16} /> Sortear todo de nuevo
+          </SubmitButton>
+        </ActionForm>
+      </div>
       {Array.from({ length: tournament.totalRounds }, (_, i) => i + 1).map((round) => {
         const bestOf = series.find((s) => s.round === round)?.bestOf ?? tournament.defaultBestOf;
         const plan = tournament.roundPlans[round - 1] ?? [];
+        const roundSeries = series.filter((s) => s.round === round && !s.isBye);
         const started = series.filter((s) => s.round === round && !s.isBye && s.games.some((g) => g.status !== "pending")).length;
         return (
           <section key={round} className="card space-y-3 p-4">
@@ -42,16 +52,43 @@ export default async function RoundMapsPage({ params }: { params: Promise<{ slug
               <h2 className="font-display text-xl">{roundName(round, tournament.totalRounds)}</h2>
               <span className="text-xs font-bold text-muted">BO{bestOf}</span>
             </div>
-            <div className="space-y-1">
-              {plan.map((g, i) => (
-                <div key={i} className="flex items-center gap-2">
-                  <span className="w-6 text-center font-display text-muted">{i + 1}</span>
-                  <ModeMapChip mode={g.modeId ? modeById.get(g.modeId) ?? null : null} map={g.mapId ? mapById.get(g.mapId) ?? null : null} size="sm" />
+            {plan.length ? (
+              <div className="space-y-1">
+                <p className="text-xs font-black uppercase tracking-wider text-muted">Plan fijo para toda la ronda</p>
+                {plan.map((g, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <span className="w-6 text-center font-display text-muted">{i + 1}</span>
+                    <ModeMapChip mode={g.modeId ? modeById.get(g.modeId) ?? null : null} map={g.mapId ? mapById.get(g.mapId) ?? null : null} size="sm" />
+                  </div>
+                ))}
+              </div>
+            ) : null}
+            <div className="space-y-2">
+              {roundSeries.map((s) => (
+                <div key={s.id} className="rounded-xl bg-bg-soft p-2.5">
+                  <p className="mb-1.5 truncate text-xs font-black text-muted">
+                    #{s.number} · {s.teamA?.name ?? "Por definir"} vs {s.teamB?.name ?? "Por definir"}
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {s.games.map((g) => (
+                      <span key={g.number} className="inline-flex items-center gap-1">
+                        <span className="font-display text-xs text-muted">{g.number}</span>
+                        <ModeMapChip mode={g.mode} map={g.map} size="sm" />
+                      </span>
+                    ))}
+                  </div>
                 </div>
               ))}
             </div>
+            <ActionForm action={rerollMapsAction}>
+              <input type="hidden" name="id" value={tournament.id} />
+              <input type="hidden" name="round" value={round} />
+              <SubmitButton className="btn-ghost btn-sm" pendingText="Sorteando…">
+                <Shuffle size={15} /> Sortear esta ronda de nuevo
+              </SubmitButton>
+            </ActionForm>
             <details className="rounded-xl bg-bg-soft p-3">
-              <summary className="cursor-pointer text-sm font-bold">Cambiar mapas de esta ronda</summary>
+              <summary className="cursor-pointer text-sm font-bold">Fijar el mismo plan para toda la ronda</summary>
               <ActionForm action={updateRoundPlanAction} className="mt-3 space-y-2">
                 <input type="hidden" name="id" value={tournament.id} />
                 <input type="hidden" name="round" value={round} />

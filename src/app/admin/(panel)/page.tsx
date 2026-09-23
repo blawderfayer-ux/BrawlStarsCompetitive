@@ -25,11 +25,11 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
         <div className="card border-brand/50 p-4">
           <p className="font-extrabold">Primer paso: cargar modos y mapas</p>
           <p className="mb-3 text-sm text-muted">
-            Carga el pool competitivo BSC 2026 (6 modos 3v3, 18 mapas). Después podrás editarlo.
+            Carga los 6 modos 3v3 y sus mapas de 2026 con los nombres del juego en español. Después podrás editarlos.
           </p>
           <ActionForm action={seedCatalogAction}>
             <SubmitButton className="btn-primary" pendingText="Cargando…">
-              Cargar catálogo BSC 2026
+              Cargar modos y mapas
             </SubmitButton>
           </ActionForm>
         </div>

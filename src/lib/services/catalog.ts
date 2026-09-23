@@ -1,16 +1,24 @@
 import "server-only";
 import { connectDB } from "../db";
-import { DEFAULT_MODES } from "../catalog";
+import { Types } from "mongoose";
+import { DEFAULT_MODES, MAP_RENAMES, RETIRED_MAPS } from "../catalog";
 import { slugify } from "../utils";
-import { GameMap, GameMode, User, type StaffRole, STAFF_ROLES } from "@/models";
+import { GameMap, GameMode, Tournament, User, type StaffRole, STAFF_ROLES } from "@/models";
 import { hashPassword } from "../password";
 import { UserError } from "./tx";
 
-/** Carga los modos y mapas del BSC 2026 si todavía no existen (idempotente). */
+/**
+ * Carga o actualiza el catálogo de modos y mapas (idempotente):
+ * - crea los modos y mapas que falten,
+ * - renombra al español los mapas que se cargaron en inglés y desactiva los que salieron de rotación,
+ * - agrega los mapas nuevos al pool de los torneos que no terminaron.
+ */
 export async function seedCatalog() {
   await connectDB();
   let modes = 0;
   let maps = 0;
+  let renamed = 0;
+  const catalogMapIds: Types.ObjectId[] = [];
   for (const [i, m] of DEFAULT_MODES.entries()) {
     let mode = await GameMode.findOne({ slug: m.slug });
     if (!mode) {
@@ -24,16 +32,34 @@ export async function seedCatalog() {
       });
       modes++;
     }
+    for (const [en, es] of Object.entries(MAP_RENAMES)) {
+      const old = await GameMap.findOne({ mode: mode._id, name: en });
+      if (!old) continue;
+      if (await GameMap.exists({ mode: mode._id, name: es })) {
+        await GameMap.updateOne({ _id: old._id }, { $set: { active: false } });
+      } else {
+        await GameMap.updateOne({ _id: old._id }, { $set: { name: es, active: true } });
+        renamed++;
+      }
+    }
+    await GameMap.updateMany({ mode: mode._id, name: { $in: RETIRED_MAPS } }, { $set: { active: false } });
     for (const [j, name] of m.maps.entries()) {
-      const r = await GameMap.updateOne(
+      const r = await GameMap.findOneAndUpdate(
         { mode: mode._id, name },
         { $setOnInsert: { order: j } },
-        { upsert: true },
+        { upsert: true, returnDocument: "after", includeResultMetadata: true },
       );
-      maps += r.upsertedCount;
+      if (!r.lastErrorObject?.updatedExisting) maps++;
+      if (r.value) catalogMapIds.push(r.value._id);
     }
   }
-  return { modes, maps };
+  const retired = await GameMap.find({ name: { $in: RETIRED_MAPS } }, { _id: 1 }).lean();
+  const openTournaments = { status: { $nin: ["finished" as const, "cancelled" as const] } };
+  if (retired.length) {
+    await Tournament.updateMany(openTournaments, { $pull: { mapPool: { $in: retired.map((r) => r._id) } } });
+  }
+  const pools = await Tournament.updateMany(openTournaments, { $addToSet: { mapPool: { $each: catalogMapIds } } });
+  return { modes, maps, renamed, tournaments: pools.modifiedCount };
 }
 
 export async function saveMode(
@@ -98,7 +124,7 @@ export async function hasAnyStaff() {
 }
 
 /**
- * Configuración inicial: crea el primer administrador y carga el catálogo BSC 2026.
+ * Configuración inicial: crea el primer administrador y carga el catálogo de modos y mapas.
  * Solo funciona mientras no exista ningún usuario; después queda bloqueado.
  */
 export async function createFirstAdmin(input: { name: string; email: string; password: string }) {

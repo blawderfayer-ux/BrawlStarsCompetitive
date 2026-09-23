@@ -26,7 +26,7 @@ juega; la plataforma organiza la competición.
 - Estados de partida (pendiente, en curso, resultado pendiente, disputada, cancelada), reprogramar, deshacer el
   último game, reiniciar serie, walkover, descalificar equipos.
 - Historial de auditoría: quién hizo qué y cuándo.
-- Catálogo editable de modos y mapas (viene cargado el pool BSC 2026) y gestión del staff.
+- Catálogo editable de modos y mapas (viene cargado con los mapas 2026 en español; modos y mapas al azar por partida) y gestión del staff.
 
 ## Tecnología
 
@@ -64,7 +64,7 @@ npm run dev
 - Público: http://localhost:3000
 - Panel: http://localhost:3000/admin
 
-El `seed` carga los 6 modos 3v3 y los 18 mapas del pool BSC 2026 y crea el primer administrador. Se puede volver a
+El `seed` carga los 6 modos 3v3 y sus mapas 2026 en español y crea el primer administrador. Se puede volver a
 ejecutar sin duplicar nada.
 
 ### 4. Publicar en Vercel

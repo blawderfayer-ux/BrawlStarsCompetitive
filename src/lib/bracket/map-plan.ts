@@ -49,3 +49,39 @@ export function repeatedModes(plan: GamePlan[]): number[] {
   });
   return repeated;
 }
+
+/**
+ * Sortea modo y mapa para una serie: cada partida recibe su propio sorteo.
+ * - Los modos salen en orden aleatorio y no se repiten dentro de la serie mientras alcancen.
+ * - Cada modo recibe un mapa al azar de los que hay en el pool.
+ */
+export function randomSeriesPlan(pool: PoolMap[], bestOf: number, random: () => number = Math.random): GamePlan[] {
+  if (pool.length === 0) {
+    return Array.from({ length: bestOf }, () => ({ modeId: null, mapId: null }));
+  }
+  const mapsByMode = new Map<string, string[]>();
+  for (const m of pool) {
+    if (!mapsByMode.has(m.modeId)) mapsByMode.set(m.modeId, []);
+    mapsByMode.get(m.modeId)!.push(m.mapId);
+  }
+  const pick = <T>(list: T[]) => list[Math.floor(random() * list.length)];
+  const shuffle = <T>(list: T[]) => {
+    const out = [...list];
+    for (let i = out.length - 1; i > 0; i--) {
+      const j = Math.floor(random() * (i + 1));
+      [out[i], out[j]] = [out[j], out[i]];
+    }
+    return out;
+  };
+
+  const modes: string[] = [];
+  while (modes.length < bestOf) modes.push(...shuffle([...mapsByMode.keys()]));
+  const usedMaps = new Set<string>();
+  return modes.slice(0, bestOf).map((modeId) => {
+    const maps = mapsByMode.get(modeId)!;
+    const fresh = maps.filter((m) => !usedMaps.has(m));
+    const mapId = pick(fresh.length ? fresh : maps);
+    usedMaps.add(mapId);
+    return { modeId, mapId };
+  });
+}
