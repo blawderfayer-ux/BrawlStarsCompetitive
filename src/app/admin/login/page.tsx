@@ -4,11 +4,13 @@ import { ActionForm, SubmitButton } from "@/components/action-form";
 import { Container } from "@/components/ui";
 import { getCurrentUser } from "@/lib/auth";
 import { loginAction } from "@/app/admin/actions";
+import { hasAnyStaff } from "@/lib/services/catalog";
 
 export const metadata: Metadata = { title: "Acceso organizadores", robots: { index: false } };
 
 export default async function LoginPage() {
   if (await getCurrentUser()) redirect("/admin");
+  if (!(await hasAnyStaff())) redirect("/admin/setup");
   return (
     <Container className="max-w-sm py-12">
       <div className="card p-6">

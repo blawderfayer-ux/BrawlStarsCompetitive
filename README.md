@@ -72,7 +72,12 @@ ejecutar sin duplicar nada.
 1. Importa el repositorio en [vercel.com/new](https://vercel.com/new).
 2. En **Environment Variables** agrega `MONGODB_URI` y `SESSION_SECRET` (y opcionalmente `MONGODB_DB`,
    `NEXT_PUBLIC_TIMEZONE`, `TOURNAMENT_UTC_OFFSET`).
-3. Deploy. El `seed` se ejecuta una vez desde tu computadora apuntando a la misma base.
+3. Deploy.
+4. Entra a `https://tu-sitio.vercel.app/admin`: como la base está vacía, aparece la **configuración inicial** para
+   crear el administrador principal (y se cargan los modos y mapas). Hazlo apenas publiques: esa pantalla se bloquea
+   en cuanto existe el primer usuario.
+
+> Alternativa sin navegador: `npm run seed` desde tu computadora (paso 3).
 
 ## Scripts
 

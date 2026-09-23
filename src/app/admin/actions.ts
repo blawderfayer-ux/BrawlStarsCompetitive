@@ -8,6 +8,7 @@ import type { Slot } from "@/lib/bracket";
 import { connectDB } from "@/lib/db";
 import { parseRegistrationForm } from "@/lib/registration-form";
 import {
+  createFirstAdmin,
   createStaffUser,
   saveMap,
   saveMode,
@@ -61,6 +62,21 @@ export async function loginAction(_prev: Result, form: FormData): Promise<Action
     return { ok: false, error: "Email o contraseña incorrectos." };
   }
   await createSession(String(user._id));
+  redirect("/admin");
+}
+
+export async function setupAction(_prev: Result, form: FormData): Promise<ActionResult> {
+  let userId = "";
+  const res = await runAction(async () => {
+    if (str(form, "password") !== str(form, "password2")) throw new UserError("Las contraseñas no coinciden.");
+    userId = await createFirstAdmin({
+      name: str(form, "name"),
+      email: str(form, "email"),
+      password: str(form, "password"),
+    });
+  });
+  if (!res.ok) return res;
+  await createSession(userId);
   redirect("/admin");
 }
 

@@ -92,6 +92,29 @@ export async function createStaffUser(input: { name: string; email: string; pass
   });
 }
 
+export async function hasAnyStaff() {
+  await connectDB();
+  return !!(await User.exists({}));
+}
+
+/**
+ * Configuración inicial: crea el primer administrador y carga el catálogo BSC 2026.
+ * Solo funciona mientras no exista ningún usuario; después queda bloqueado.
+ */
+export async function createFirstAdmin(input: { name: string; email: string; password: string }) {
+  if (await hasAnyStaff()) throw new UserError("La plataforma ya está configurada. Inicia sesión.");
+  await createStaffUser({ ...input, role: "admin" });
+  const user = await User.findOne({ email: input.email.trim().toLowerCase() }, { _id: 1 }).lean();
+  // Si dos personas lo intentaron al mismo tiempo, solo se queda la primera cuenta.
+  const first = await User.findOne({}, { _id: 1 }).sort({ createdAt: 1, _id: 1 }).lean();
+  if (!user || String(first?._id) !== String(user._id)) {
+    if (user) await User.deleteOne({ _id: user._id });
+    throw new UserError("La plataforma ya está configurada. Inicia sesión.");
+  }
+  await seedCatalog();
+  return String(user._id);
+}
+
 export async function updateStaffUser(
   id: string,
   actorId: string,
