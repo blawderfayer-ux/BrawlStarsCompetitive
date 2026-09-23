@@ -51,7 +51,7 @@ export default async function MyRegistrationPage({ params }: { params: Promise<{
       {team.adminNote && team.registrationStatus !== "approved" ? (
         <div className="card border-orange-400/50 p-4">
           <p className="text-xs font-extrabold uppercase text-orange-300">Mensaje de la organización</p>
-          <p className="mt-1 whitespace-pre-line text-sm font-bold">{team.adminNote}</p>
+          <p className="mt-1 whitespace-pre-line [overflow-wrap:anywhere] text-sm font-bold">{team.adminNote}</p>
         </div>
       ) : null}
 

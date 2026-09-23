@@ -41,6 +41,11 @@
   --font-sans: var(--font-body), system-ui, sans-serif;
 }
 
+html,
+body {
+  overflow-x: clip;
+}
+
 html {
   color-scheme: dark;
   -webkit-tap-highlight-color: transparent;

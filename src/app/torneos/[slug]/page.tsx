@@ -28,7 +28,7 @@ export default async function TournamentHome({ params }: { params: Promise<{ slu
     : null;
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
+    <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
       <div className="min-w-0 space-y-8">
         {champion ? (
           <section className="card pop-in relative overflow-hidden bg-brand p-6 text-center text-brand-ink">
@@ -137,7 +137,7 @@ export default async function TournamentHome({ params }: { params: Promise<{ slu
             <ul className="card divide-y-2 divide-ink/60 overflow-hidden">
               {events.slice(0, 12).map((e) => (
                 <li key={e.id} className="flex items-start justify-between gap-3 px-4 py-3">
-                  <span className="text-sm font-bold">{e.message}</span>
+                  <span className="min-w-0 text-sm font-bold [overflow-wrap:anywhere]">{e.message}</span>
                   <span className="shrink-0 text-xs font-bold text-muted">{timeAgo(e.createdAt)}</span>
                 </li>
               ))}
@@ -148,7 +148,7 @@ export default async function TournamentHome({ params }: { params: Promise<{ slu
         </section>
       </div>
 
-      <aside className="space-y-6">
+      <aside className="min-w-0 space-y-6">
         {tournament.posterUrl ? (
           <a href={tournament.posterUrl} target="_blank" rel="noreferrer" className="card block overflow-hidden">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -158,7 +158,7 @@ export default async function TournamentHome({ params }: { params: Promise<{ slu
         {tournament.description ? (
           <section>
             <SectionTitle>Sobre el torneo</SectionTitle>
-            <p className="card whitespace-pre-line p-4 text-sm leading-relaxed">{tournament.description}</p>
+            <p className="card whitespace-pre-line [overflow-wrap:anywhere] p-4 text-sm leading-relaxed">{tournament.description}</p>
           </section>
         ) : null}
       </aside>
