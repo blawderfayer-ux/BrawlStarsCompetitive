@@ -1,6 +1,6 @@
 /**
  * Prepara la base de datos:
- *   1. Carga los modos y mapas del BSC 2026 (no duplica si ya existen).
+ *   1. Carga o actualiza los modos y mapas 2026 en español (no duplica si ya existen).
  *   2. Crea el primer administrador si se pasan ADMIN_EMAIL y ADMIN_PASSWORD.
  *
  * Uso:  ADMIN_EMAIL=tu@correo.com ADMIN_PASSWORD=unaClaveSegura ADMIN_NAME="Tu nombre" npm run seed

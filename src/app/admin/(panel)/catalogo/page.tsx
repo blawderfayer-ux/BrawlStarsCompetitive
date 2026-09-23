@@ -16,8 +16,8 @@ export default async function CatalogPage() {
           <p className="text-sm text-muted">Desactiva lo que salga de rotación y agrega lo nuevo. Afecta a torneos futuros.</p>
         </div>
         <ActionForm action={seedCatalogAction}>
-          <SubmitButton className="btn-ghost btn-sm" pendingText="Cargando…">
-            Recargar pool BSC 2026
+          <SubmitButton className="btn-primary btn-sm" pendingText="Actualizando…">
+            Actualizar mapas 2026 (español)
           </SubmitButton>
         </ActionForm>
       </div>

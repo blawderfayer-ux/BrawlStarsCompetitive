@@ -44,6 +44,8 @@ export interface GenerateOptions {
   defaultBestOf: number;
   /** Plan de modos/mapas por ronda (índice 0 = ronda 1). */
   mapPlanByRound?: GamePlan[][];
+  /** Plan propio para cada serie (tiene prioridad sobre `mapPlanByRound`). */
+  planForSeries?: (round: number, position: number, bestOf: number) => GamePlan[];
 }
 
 export interface GeneratedBracket {
@@ -94,7 +96,7 @@ export function generateSingleElimination(
         walkover: false,
         nextKey: isFinal ? null : seriesKey(round + 1, Math.ceil(position / 2)),
         nextSlot: isFinal ? null : position % 2 === 1 ? "A" : "B",
-        games: buildGames(bestOf, opts.mapPlanByRound?.[round - 1]),
+        games: buildGames(bestOf, opts.planForSeries?.(round, position, bestOf) ?? opts.mapPlanByRound?.[round - 1]),
       };
       series.push(s);
       byKey.set(s.key, s);

@@ -5,7 +5,7 @@ import {
   generateSingleElimination,
   nextPowerOfTwo,
   roundName,
-  suggestRoundPlan,
+  randomSeriesPlan,
   type GamePlan,
 } from "../bracket";
 import { connectDB } from "../db";
@@ -222,11 +222,10 @@ export async function generateBracket(tournamentId: string, seeding: SeedingMeth
       (_, i) => t.bestOfByRound?.[i] || t.defaultBestOf,
     );
     const pool = await poolFor(t._id);
-    const mapPlanByRound: GamePlan[][] = bestOfByRound.map((bo, i) => suggestRoundPlan(pool, bo, i + 1));
-
+    // Cada partida sortea sus propios modos y mapas (sin repetir modo dentro de la serie).
     const bracket = generateSingleElimination(
       ordered.map((x) => String(x._id)),
-      { defaultBestOf: t.defaultBestOf, bestOfByRound, mapPlanByRound },
+      { defaultBestOf: t.defaultBestOf, bestOfByRound, planForSeries: (_r, _p, bo) => randomSeriesPlan(pool, bo) },
     );
 
     // Numeración "Partida #N": en orden de ronda, sin contar BYE.
@@ -251,9 +250,8 @@ export async function generateBracket(tournamentId: string, seeding: SeedingMeth
     t.set({
       totalRounds,
       bestOfByRound,
-      roundPlans: mapPlanByRound.map((games) =>
-        games.map((g) => ({ mode: g.modeId, map: g.mapId })),
-      ),
+      // Plan vacío = "al azar por partida". El admin puede fijar un plan común en Mapas.
+      roundPlans: bestOfByRound.map(() => []),
       bracketGeneratedAt: new Date(),
       status: "live",
     });
@@ -292,6 +290,52 @@ export async function resetBracket(tournamentId: string, actorId: string) {
       [{ tournament: t._id, type: "bracket_reset", message: "El bracket fue reiniciado por la organización.", actor: actorId }],
       opts,
     );
+  });
+}
+
+/**
+ * Vuelve a sortear modo y mapa de cada partida que todavía no empezó
+ * (de una ronda o de todo el torneo si `round` es null).
+ */
+export async function rerollMaps(tournamentId: string, round: number | null, actorId: string) {
+  return withTransaction(async (session) => {
+    const opts = { session: session ?? undefined };
+    const t = await Tournament.findById(tournamentId).session(session);
+    if (!t) throw new UserError("El torneo no existe.");
+    if (!t.bracketGeneratedAt) throw new UserError("Primero genera el bracket.");
+    const pool = await poolFor(t._id);
+    if (!pool.length) throw new UserError("El pool de mapas está vacío. Elige mapas en Configuración.");
+
+    const series = await Series.find({ tournament: t._id, ...(round ? { round } : {}) }).session(session);
+    let updated = 0;
+    for (const s of series) {
+      if (s.isBye || s.winnerSlot || s.games.some((g) => g.status !== "pending")) continue;
+      const plan = randomSeriesPlan(pool, s.games.length);
+      s.games.forEach((g, i) => {
+        g.mode = plan[i].modeId ? new Types.ObjectId(plan[i].modeId!) : null;
+        g.map = plan[i].mapId ? new Types.ObjectId(plan[i].mapId!) : null;
+      });
+      await s.save(opts);
+      updated++;
+    }
+    const roundPlans = (t.roundPlans ?? []).map((games, i) => (!round || i === round - 1 ? [] : games));
+    t.set({ roundPlans });
+    await t.save(opts);
+    await TournamentEvent.create(
+      [
+        {
+          tournament: t._id,
+          type: "series_updated",
+          message: round
+            ? `Se sortearon de nuevo los mapas de ${roundName(round, t.totalRounds ?? 0).toLowerCase()}.`
+            : "Se sortearon de nuevo los mapas de las partidas pendientes.",
+          public: false,
+          actor: actorId,
+        },
+      ],
+      opts,
+    );
+    return updated;
   });
 }
 
