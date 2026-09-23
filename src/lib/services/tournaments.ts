@@ -32,6 +32,7 @@ export interface TournamentInput {
   bestOfByRound: number[];
   roundDurationMinutes: number;
   rules: string;
+  posterUrl: string;
 }
 
 function validateBestOf(n: number) {
@@ -85,6 +86,7 @@ export async function updateTournament(id: string, input: TournamentInput, actor
     maxTeams: input.maxTeams,
     roundDurationMinutes: input.roundDurationMinutes,
     rules: input.rules,
+    posterUrl: input.posterUrl,
     // Con el bracket generado, el BO de cada serie ya está fijado; no se cambia aquí.
     ...(bracketLocked ? {} : { defaultBestOf: input.defaultBestOf, bestOfByRound: input.bestOfByRound }),
   });
@@ -121,9 +123,9 @@ export async function setTournamentStatus(id: string, status: TournamentStatus, 
   t.status = status;
   await t.save();
   const messages: Partial<Record<TournamentStatus, string>> = {
-    registration_open: "📝 ¡Inscripciones abiertas!",
-    registration_closed: "🔒 Inscripciones cerradas.",
-    cancelled: "⛔ El torneo fue cancelado.",
+    registration_open: "¡Inscripciones abiertas!",
+    registration_closed: "Inscripciones cerradas.",
+    cancelled: "El torneo fue cancelado.",
   };
   await TournamentEvent.create({
     tournament: t._id,
@@ -261,7 +263,7 @@ export async function generateBracket(tournamentId: string, seeding: SeedingMeth
         {
           tournament: t._id,
           type: "bracket_generated",
-          message: `🏁 ¡Bracket generado! ${ordered.length} equipos${byeNote}. Comienza ${roundName(1, totalRounds).toLowerCase()}.`,
+          message: `¡Bracket generado! ${ordered.length} equipos${byeNote}. Comienza ${roundName(1, totalRounds).toLowerCase()}.`,
           actor: actorId,
         },
       ],
@@ -327,7 +329,7 @@ export async function updateRoundPlan(tournamentId: string, round: number, plan:
         {
           tournament: t._id,
           type: "series_updated",
-          message: `🗺️ Se actualizaron los mapas de ${roundName(round, t.totalRounds ?? 0).toLowerCase()}.`,
+          message: `Se actualizaron los mapas de ${roundName(round, t.totalRounds ?? 0).toLowerCase()}.`,
           actor: actorId,
         },
       ],
@@ -357,7 +359,7 @@ export async function disqualifyTeam(teamId: string, actorId: string) {
   await TournamentEvent.create({
     tournament: team.tournament,
     type: "team_eliminated",
-    message: `⛔ ${team.name} fue descalificado.`,
+    message: `${team.name} fue descalificado.`,
     actor: actorId,
   });
 }

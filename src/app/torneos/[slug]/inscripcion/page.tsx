@@ -8,13 +8,13 @@ export default async function RegisterPage({ params }: { params: Promise<{ slug:
 
   if (tournament.status !== "registration_open") {
     return (
-      <EmptyState icon="🔒" title="Las inscripciones están cerradas">
+      <EmptyState title="Las inscripciones están cerradas">
         Revisa la sección de equipos o el bracket del torneo.
       </EmptyState>
     );
   }
   if (tournament.approvedTeams >= tournament.maxTeams) {
-    return <EmptyState icon="🈵" title="El torneo ya está completo" />;
+    return <EmptyState title="El torneo ya está completo" />;
   }
 
   return (

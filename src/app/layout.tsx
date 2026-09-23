@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Lilita_One, Nunito } from "next/font/google";
+import Image from "next/image";
 import Link from "next/link";
 import "./globals.css";
 
@@ -7,7 +8,7 @@ import "./globals.css";
 export const dynamic = "force-dynamic";
 
 const display = Lilita_One({ variable: "--font-display", weight: "400", subsets: ["latin"] });
-const body = Nunito({ variable: "--font-body", subsets: ["latin"] });
+const body = Nunito({ variable: "--font-body", subsets: ["latin"], weight: ["600", "700", "800", "900"] });
 
 export const metadata: Metadata = {
   title: { default: "Brawl Tournament", template: "%s · Brawl Tournament" },
@@ -15,7 +16,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0c0a1d",
+  themeColor: "#0a0f2e",
   width: "device-width",
   initialScale: 1,
 };
@@ -23,25 +24,42 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es" className={`${display.variable} ${body.variable} antialiased`}>
-      <body className="flex min-h-dvh flex-col font-sans">
-        <header className="sticky top-0 z-30 border-b border-line/60 bg-bg/85 backdrop-blur">
+      <body className="flex min-h-dvh flex-col font-sans font-semibold">
+        <header className="sticky top-0 z-30 border-b-[3px] border-ink bg-[#0b1340]/95 backdrop-blur">
           <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
-            <Link href="/" className="font-display flex items-center gap-2 text-lg text-brand">
-              <span aria-hidden>🏆</span> BRAWL TOURNAMENT
+            <Link href="/" className="flex items-center gap-2">
+              <Image
+                src="/img/skull.webp"
+                alt=""
+                width={34}
+                height={34}
+                priority
+                className="rounded-lg border-2 border-ink shadow-[0_2px_0_var(--ink)]"
+              />
+              <span className="title-ink text-xl leading-none text-brand">BRAWL TOURNAMENT</span>
             </Link>
-            <Link href="/torneos" className="text-sm font-bold text-muted">
+            <Link href="/torneos" className="font-display text-base uppercase text-muted">
               Torneos
             </Link>
           </div>
         </header>
         <div className="flex-1">{children}</div>
-        <footer className="mx-auto w-full max-w-5xl px-4 py-8 text-center text-xs text-muted">
-          <p>Plataforma independiente de organización de torneos. No afiliada a Supercell.</p>
-          <p className="mt-2">
-            <Link href="/admin" className="underline underline-offset-2">
-              Acceso organizadores
-            </Link>
-          </p>
+        <footer className="mt-10 border-t-[3px] border-ink bg-[#070b24]">
+          <div className="mx-auto w-full max-w-5xl px-4 py-6 text-center text-xs font-semibold text-muted">
+            <p>
+              This material is unofficial and is not endorsed by Supercell. For more information see{" "}
+              <a href="https://supercell.com/en/fan-content-policy/" className="underline" target="_blank" rel="noreferrer">
+                Supercell&apos;s Fan Content Policy
+              </a>
+              .
+            </p>
+            <p className="mt-1">Plataforma independiente de organización de torneos.</p>
+            <p className="mt-3">
+              <Link href="/admin" className="underline underline-offset-2">
+                Acceso organizadores
+              </Link>
+            </p>
+          </div>
         </footer>
       </body>
     </html>

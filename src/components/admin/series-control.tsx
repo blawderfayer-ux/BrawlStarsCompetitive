@@ -79,7 +79,7 @@ export function SeriesControl({
             <div key={slot} className={cn("flex items-center gap-3", s.winnerSlot && !won && "opacity-50")}>
               <TeamLogo team={team} size={36} />
               <span className={cn("flex-1 truncate text-lg font-extrabold", won && "text-brand")}>
-                {team?.name ?? "Por definir"} {won ? "👑" : ""}
+                {team?.name ?? "Por definir"}
               </span>
               <span className="font-display text-3xl">{score}</span>
             </div>
@@ -87,7 +87,7 @@ export function SeriesControl({
         })}
       </div>
 
-      {s.scheduledAt ? <p className="text-sm font-bold">🕒 {formatDateTime(s.scheduledAt)}</p> : null}
+      {s.scheduledAt ? <p className="text-sm font-bold">Horario: {formatDateTime(s.scheduledAt)}</p> : null}
 
       {/* Registrar resultado del game actual */}
       {ready && game && s.status !== "cancelled" ? (
@@ -115,7 +115,7 @@ export function SeriesControl({
           {hidden}
           {s.status !== "live" ? (
             <SubmitButton name="status" value="live" className="btn-danger btn-sm">
-              🔴 Iniciar
+              Iniciar
             </SubmitButton>
           ) : null}
           {s.status !== "awaiting_result" ? (
@@ -125,7 +125,7 @@ export function SeriesControl({
           ) : null}
           {s.status !== "disputed" ? (
             <SubmitButton name="status" value="disputed" className="btn-ghost btn-sm">
-              ⚠️ Disputada
+              Disputada
             </SubmitButton>
           ) : null}
           {s.status !== "pending" ? (
@@ -175,7 +175,7 @@ export function SeriesControl({
             {finishedGames > 0 && !s.walkover ? (
               <ActionForm action={undoGameAction} confirm="¿Deshacer el último game registrado?">
                 {hidden}
-                <SubmitButton className="btn-ghost btn-sm">↩️ Deshacer último game</SubmitButton>
+                <SubmitButton className="btn-ghost btn-sm">Deshacer último game</SubmitButton>
               </ActionForm>
             ) : null}
             {isAdmin && ready && !s.winnerSlot ? (

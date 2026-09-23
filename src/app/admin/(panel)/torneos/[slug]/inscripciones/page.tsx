@@ -17,11 +17,11 @@ import {
 import { loadAdminTournament } from "../data";
 
 const GROUPS = [
-  { status: "pending", title: "⏳ Pendientes de revisión" },
-  { status: "needs_changes", title: "✏️ Esperando corrección del capitán" },
-  { status: "approved", title: "✅ Aprobados" },
-  { status: "rejected", title: "❌ Rechazados" },
-  { status: "withdrawn", title: "↩️ Retirados" },
+  { status: "pending", title: "Pendientes de revisión" },
+  { status: "needs_changes", title: "Esperando corrección del capitán" },
+  { status: "approved", title: "Aprobados" },
+  { status: "rejected", title: "Rechazados" },
+  { status: "withdrawn", title: "Retirados" },
 ];
 
 function ReviewButtons({ team, locked }: { team: TeamAdminView; locked: boolean }) {
@@ -65,7 +65,7 @@ export default async function RegistrationsPage({ params }: { params: Promise<{ 
     <Collapsible
       className="card p-4"
       defaultOpen={teams.length === 0}
-      summary={<summary className="cursor-pointer font-extrabold">📋 Importar equipos desde una lista</summary>}
+      summary={<summary className="cursor-pointer font-extrabold">Importar equipos desde una lista</summary>}
     >
       <p className="mt-2 text-sm text-muted">
         Pega la lista tal como la tienes (por ejemplo, del grupo de WhatsApp): una línea con el nombre del equipo y
@@ -93,7 +93,7 @@ export default async function RegistrationsPage({ params }: { params: Promise<{ 
     <div className="space-y-8">
       {importCard}
       {teams.length === 0 ? (
-        <EmptyState icon="📝" title="Todavía no hay inscripciones">
+        <EmptyState title="Todavía no hay inscripciones">
           {tournament.status === "registration_open"
             ? `Comparte el enlace: /torneos/${slug}/inscripcion`
             : "Abre las inscripciones desde el Resumen."}
@@ -119,7 +119,7 @@ export default async function RegistrationsPage({ params }: { params: Promise<{ 
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-lg font-extrabold">{team.name}</p>
                       <p className="text-xs text-muted">
-                        Inscrito {timeAgo(team.createdAt)} · 📞 {team.captainContact}
+                        Inscrito {timeAgo(team.createdAt)}{team.captainContact ? ` · Contacto: ${team.captainContact}` : ""}
                       </p>
                       <div className="mt-1 flex flex-wrap gap-1">
                         <StatusBadge map={REGISTRATION_STATUS} value={team.registrationStatus} />

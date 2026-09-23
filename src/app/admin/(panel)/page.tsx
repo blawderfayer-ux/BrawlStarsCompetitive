@@ -45,7 +45,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
       </div>
 
       {tournaments.length === 0 ? (
-        <EmptyState icon="🏆" title="Todavía no hay torneos">
+        <EmptyState title="Todavía no hay torneos">
           {isAdmin ? "Crea el primero con el botón “Nuevo torneo”." : "Un administrador debe crear el torneo."}
         </EmptyState>
       ) : (
@@ -62,7 +62,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
               </div>
               <p className="mt-1 text-sm text-muted">
                 {t.approvedTeams}/{t.maxTeams} aprobados
-                {t.pendingRegistrations ? ` · ⏳ ${t.pendingRegistrations} por revisar` : ""}
+                {t.pendingRegistrations ? ` · ${t.pendingRegistrations} por revisar` : ""}
                 {t.startsAt ? ` · ${formatDateTime(t.startsAt)}` : ""}
               </p>
             </Link>

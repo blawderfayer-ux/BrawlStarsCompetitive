@@ -82,6 +82,7 @@ function toTournamentView(t: TournamentDoc, approvedTeams: number): TournamentVi
     roundDurationMinutes: t.roundDurationMinutes ?? 30,
     status: t.status,
     rules: t.rules ?? "",
+    posterUrl: t.posterUrl ?? "",
     mapPool: (t.mapPool ?? []).map(String),
     roundPlans: (t.roundPlans ?? []).map((games) =>
       games.map((g) => ({ modeId: idOf(g.mode), mapId: idOf(g.map) })),

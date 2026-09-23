@@ -215,7 +215,7 @@ export async function reviewRegistration(teamId: string, action: ReviewAction, n
     type: "registration_reviewed",
     message:
       action === "approve"
-        ? `✅ ${team.name} fue aprobado y ya forma parte del torneo.`
+        ? `${team.name} fue aprobado y ya forma parte del torneo.`
         : `Inscripción de ${team.name}: ${status}.`,
     public: action === "approve",
     actor: actorId,

@@ -14,7 +14,7 @@ export default async function RoundMapsPage({ params }: { params: Promise<{ slug
 
   if (!tournament.bracketGeneratedAt) {
     return (
-      <EmptyState icon="🗺️" title="Primero genera el bracket">
+      <EmptyState title="Primero genera el bracket">
         Al generarlo se propone automáticamente un plan de mapas por ronda (sin repetir modo en una serie) usando el
         pool del torneo. Aquí podrás cambiarlo. El pool se edita en Configuración.
       </EmptyState>

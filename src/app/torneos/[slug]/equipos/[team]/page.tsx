@@ -1,3 +1,4 @@
+import { Crown, Repeat, UserRound } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SetMyTeamButton } from "@/components/my-team";
@@ -46,7 +47,7 @@ export default async function TeamPage({ params }: { params: Promise<{ slug: str
           {team.members.map((m, i) => (
             <li key={i} className="flex items-center justify-between gap-3 px-4 py-3">
               <span className="flex min-w-0 items-center gap-2">
-                <span aria-hidden>{m.role === "captain" ? "👑" : m.role === "sub" ? "🔁" : "👤"}</span>
+                {m.role === "captain" ? <Crown size={18} className="text-brand" /> : m.role === "sub" ? <Repeat size={18} className="text-muted" /> : <UserRound size={18} className="text-muted" />}
                 <span className="truncate font-extrabold">{m.name}</span>
               </span>
               <span className="shrink-0 text-right">
@@ -60,7 +61,7 @@ export default async function TeamPage({ params }: { params: Promise<{ slug: str
 
       {next && rival ? (
         <section>
-          <SectionTitle>{live ? "🔴 Jugando ahora" : "Próxima partida"}</SectionTitle>
+          <SectionTitle>{live ? "Jugando ahora" : "Próxima partida"}</SectionTitle>
           <div className="card p-4">
             <p className="text-xs font-extrabold uppercase text-muted">Próximo rival</p>
             <Link href={`/torneos/${slug}/equipos/${rival.slug}`} className="mt-1 flex items-center gap-3">
@@ -76,7 +77,7 @@ export default async function TeamPage({ params }: { params: Promise<{ slug: str
           </div>
         </section>
       ) : next ? (
-        <section className="card p-4 text-sm font-bold text-muted">⏳ Esperando a que se defina el próximo rival.</section>
+        <section className="card p-4 text-sm font-bold text-muted">Esperando a que se defina el próximo rival.</section>
       ) : null}
 
       <section>
@@ -97,7 +98,7 @@ export default async function TeamPage({ params }: { params: Promise<{ slug: str
                 <li key={s.id}>
                   <div className="mb-1 flex items-center justify-between px-1 text-sm font-extrabold">
                     <span>{s.roundName}</span>
-                    <span className={won ? "text-emerald-300" : "text-red-300"}>{won ? "✅ Victoria" : "❌ Derrota"}</span>
+                    <span className={won ? "text-emerald-300" : "text-red-300"}>{won ? "Victoria" : "Derrota"}</span>
                   </div>
                   <SeriesCard series={s} href={`/torneos/${slug}/partidas/${s.number}`} highlightTeamId={team.id} compact />
                 </li>

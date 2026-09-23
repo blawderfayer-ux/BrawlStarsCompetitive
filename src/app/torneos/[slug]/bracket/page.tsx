@@ -7,7 +7,7 @@ export default async function BracketPage({ params }: { params: Promise<{ slug: 
   const { tournament, series, teams } = await loadTournament(slug);
   if (!tournament.bracketGeneratedAt || series.length === 0) {
     return (
-      <EmptyState icon="🏆" title="El bracket todavía no se generó">
+      <EmptyState title="El bracket todavía no se generó">
         Se genera automáticamente cuando la organización cierra las inscripciones.
       </EmptyState>
     );

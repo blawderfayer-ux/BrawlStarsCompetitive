@@ -17,7 +17,7 @@ export default async function TeamsPage({ params }: { params: Promise<{ slug: st
 
   if (teams.length === 0) {
     return (
-      <EmptyState icon="🛡️" title="Todavía no hay equipos aprobados">
+      <EmptyState title="Todavía no hay equipos aprobados">
         Los equipos aparecen aquí cuando la organización aprueba su inscripción.
       </EmptyState>
     );

@@ -15,7 +15,7 @@ export default async function MyRegistrationPage({ params }: { params: Promise<{
   if (!found) {
     return (
       <Container className="py-8">
-        <EmptyState icon="🔗" title="Enlace inválido">
+        <EmptyState title="Enlace inválido">
           Revisa que copiaste el enlace completo que recibiste al inscribirte.
         </EmptyState>
       </Container>
@@ -40,7 +40,7 @@ export default async function MyRegistrationPage({ params }: { params: Promise<{
 
       {team.registrationStatus === "approved" ? (
         <div className="card p-4">
-          <p className="font-extrabold">✅ ¡Tu equipo fue aprobado!</p>
+          <p className="font-extrabold">¡Tu equipo fue aprobado!</p>
           <p className="mt-1 text-sm text-muted">Ya aparece en la lista oficial del torneo.</p>
           <Link href={`/torneos/${tournament.slug}/equipos/${team.slug}`} className="btn btn-primary mt-3 w-full">
             Ver mi equipo en el torneo

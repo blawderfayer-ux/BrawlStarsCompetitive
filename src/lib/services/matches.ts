@@ -141,7 +141,7 @@ async function persist(
       { $set: { championTeam: change.championTeam, status: "finished" } },
       { session: session ?? undefined },
     );
-    events.push({ type: "champion", message: `🏆 ¡${name(change.championTeam)} es el CAMPEÓN del torneo!` });
+    events.push({ type: "champion", message: `¡${name(change.championTeam)} es el CAMPEÓN del torneo!` });
   } else if (change.winnerTeam) {
     const advancedTo = change.changed.find((s) => s.key === byKey.get(ctx.series.key)?.nextKey);
     events.push({
@@ -266,10 +266,10 @@ export async function setSeriesStatus(seriesId: string, status: ManualSeriesStat
     const a = ctx.teamNames.get(String(s.teamA));
     const b = ctx.teamNames.get(String(s.teamB));
     const messages: Record<ManualSeriesStatus, string> = {
-      live: `🔴 Comienza la partida #${s.number}: ${a} vs ${b}.`,
+      live: `Comienza la partida #${s.number}: ${a} vs ${b}.`,
       pending: `La partida #${s.number} (${a} vs ${b}) vuelve a estar pendiente.`,
       awaiting_result: `Partida #${s.number}: esperando confirmación del resultado.`,
-      disputed: `⚠️ La partida #${s.number} está en revisión por un reclamo.`,
+      disputed: `La partida #${s.number} está en revisión por un reclamo.`,
       cancelled: `La partida #${s.number} fue cancelada.`,
     };
     await TournamentEvent.create(

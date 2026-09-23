@@ -130,6 +130,7 @@ export interface TournamentDoc {
   roundDurationMinutes: number;
   status: TournamentStatus;
   rules: string;
+  posterUrl: string;
   mapPool: Types.ObjectId[];
   roundPlans: PlannedGame[][];
   totalRounds: number;
@@ -155,6 +156,8 @@ const tournamentSchema = defineSchema<TournamentDoc>(
     roundDurationMinutes: { type: Number, default: 30 },
     status: { type: String, enum: TOURNAMENT_STATUSES, default: "draft" },
     rules: { type: String, default: "" },
+    /** Afiche del torneo (URL o ruta como /img/afiche-pixel.webp). */
+    posterUrl: { type: String, default: "" },
     mapPool: [{ type: ObjectId, ref: "GameMap" }],
     /** Plan de modo/mapa por ronda: roundPlans[i] = games de la ronda i+1. */
     roundPlans: { type: [[plannedGameSchema]], default: [] },

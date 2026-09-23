@@ -20,7 +20,7 @@ export default async function AdminMatchesPage({
 
   if (!tournament.bracketGeneratedAt) {
     return (
-      <EmptyState icon="⚔️" title="Todavía no hay partidas">
+      <EmptyState image="/img/vs.webp" title="Todavía no hay partidas">
         {user.role === "admin" ? "Genera el bracket desde el Resumen." : "El administrador todavía no generó el bracket."}
       </EmptyState>
     );
@@ -60,11 +60,11 @@ export default async function AdminMatchesPage({
       </div>
 
       {tournament.championTeamId ? (
-        <p className="card border-brand/60 p-4 font-extrabold text-brand">🏆 Torneo finalizado.</p>
+        <p className="card border-brand/60 p-4 font-extrabold text-brand">Torneo finalizado.</p>
       ) : null}
 
       {sorted.length === 0 ? (
-        <EmptyState icon="✅" title={ver === "activas" ? "No hay partidas listas para jugar" : "Nada por aquí"}>
+        <EmptyState title={ver === "activas" ? "No hay partidas listas para jugar" : "Nada por aquí"}>
           {ver === "activas" && waiting.length ? `${waiting.length} partidas esperan a que se definan sus equipos.` : null}
         </EmptyState>
       ) : (

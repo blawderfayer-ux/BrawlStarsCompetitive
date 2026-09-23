@@ -49,6 +49,19 @@ export function TournamentForm({
           </label>
           <textarea id="description" name="description" className="input" maxLength={2000} defaultValue={tournament?.description} />
         </div>
+        <div>
+          <label className="label" htmlFor="posterUrl">
+            Afiche (opcional)
+          </label>
+          <input
+            id="posterUrl"
+            name="posterUrl"
+            className="input font-mono"
+            defaultValue={tournament?.posterUrl}
+            placeholder="/img/afiche-pixel.webp o https://…"
+          />
+          <p className="mt-1 text-xs text-muted">Imagen que se muestra en la página del torneo.</p>
+        </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label className="label" htmlFor="startsAt">

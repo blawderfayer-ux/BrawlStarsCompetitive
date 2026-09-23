@@ -1,3 +1,4 @@
+import { Crown } from "lucide-react";
 import Link from "next/link";
 import { EmptyState, TeamLogo } from "@/components/ui";
 import { cn } from "@/lib/utils";
@@ -11,7 +12,7 @@ export default async function ResultsPage({ params }: { params: Promise<{ slug: 
   const champion = teams.find((t) => t.id === tournament.championTeamId);
 
   if (played.length === 0) {
-    return <EmptyState icon="📜" title="Todavía no hay resultados" />;
+    return <EmptyState title="Todavía no hay resultados" />;
   }
 
   const rounds = [...new Set(played.map((s) => s.round))].sort((a, b) => a - b);
@@ -19,9 +20,7 @@ export default async function ResultsPage({ params }: { params: Promise<{ slug: 
     <div className="space-y-6">
       {champion ? (
         <div className="card flex items-center gap-3 border-brand/60 p-4">
-          <span className="text-3xl" aria-hidden>
-            🏆
-          </span>
+          <Crown size={30} className="text-brand" fill="currentColor" />
           <TeamLogo team={champion} size={44} />
           <div>
             <p className="text-xs font-extrabold uppercase text-muted">Campeón</p>
