@@ -4,14 +4,16 @@ import { ActionForm, SubmitButton } from "@/components/action-form";
 import { RegistrationForm } from "@/components/registration-form";
 import { Container, EmptyState, StatusBadge, TeamLogo } from "@/components/ui";
 import { REGISTRATION_STATUS } from "@/lib/labels";
+import { notFound } from "next/navigation";
 import { findTeamByToken } from "@/lib/services/registrations";
+import { ensureAccessCodes } from "@/lib/services/room";
 import { updateRegistrationAction, withdrawRegistrationAction } from "../../torneos/actions";
 
 export const metadata: Metadata = { title: "Mi inscripción", robots: { index: false } };
 
 export default async function MyRegistrationPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
-  const found = await findTeamByToken(token);
+  let found = await findTeamByToken(token);
   if (!found) {
     return (
       <Container className="py-8">
@@ -20,6 +22,11 @@ export default async function MyRegistrationPage({ params }: { params: Promise<{
         </EmptyState>
       </Container>
     );
+  }
+  if (found.team.registrationStatus === "approved" && !found.team.accessCode) {
+    await ensureAccessCodes(String(found.team.tournament));
+    found = await findTeamByToken(token);
+    if (!found) notFound();
   }
   const { team, tournament } = found;
   const editable = team.registrationStatus === "pending" || team.registrationStatus === "needs_changes";
@@ -42,6 +49,15 @@ export default async function MyRegistrationPage({ params }: { params: Promise<{
         <div className="card p-4">
           <p className="font-extrabold">¡Tu equipo fue aprobado!</p>
           <p className="mt-1 text-sm text-muted">Ya aparece en la lista oficial del torneo.</p>
+          {team.accessCode ? (
+            <div className="mt-3 rounded-xl border-2 border-ink bg-bg-soft p-3">
+              <p className="text-xs font-black uppercase text-muted">Código de tu equipo para la sala de partidas</p>
+              <p className="font-mono text-2xl tracking-[0.3em]">{team.accessCode}</p>
+              <p className="mt-1 text-xs text-muted">
+                Úsalo en la página de tu partida para chatear con el rival y reportar resultados. No lo compartas.
+              </p>
+            </div>
+          ) : null}
           <Link href={`/torneos/${tournament.slug}/equipos/${team.slug}`} className="btn btn-primary mt-3 w-full">
             Ver mi equipo en el torneo
           </Link>

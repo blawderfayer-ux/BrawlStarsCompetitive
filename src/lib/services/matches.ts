@@ -12,6 +12,7 @@ import {
   type Slot,
 } from "../bracket";
 import { Series, Team, Tournament, TournamentEvent, type SeriesDoc } from "@/models";
+import { systemMessage } from "./room";
 import { UserError, withTransaction } from "./tx";
 
 export function toState(s: SeriesDoc): SeriesState {
@@ -184,7 +185,7 @@ function wrap(err: unknown): never {
 }
 
 export async function reportGameResult(seriesId: string, gameNumber: number, slot: Slot, actorId: string) {
-  return withTransaction(async (session) => {
+  const result = await withTransaction(async (session) => {
     const ctx = await load(seriesId, session);
     let change: ReturnType<typeof reportGame>;
     try {
@@ -202,8 +203,17 @@ export async function reportGameResult(seriesId: string, gameNumber: number, slo
         message: `Partida #${ctx.series.number} · Game ${gameNumber}: gana ${winnerName} (${a} ${s.scoreA}-${s.scoreB} ${b}).`,
       },
     ]);
-    return { decided: change.decided };
+    return {
+      decided: change.decided,
+      series: ctx.series,
+      text: `Árbitro confirmó el game ${gameNumber}: gana ${winnerName} (${a} ${s.scoreA}-${s.scoreB} ${b}).${
+        change.decided ? ` ${winnerName} gana la serie.` : ""
+      }`,
+    };
   });
+  // Aviso en la sala de la partida (fuera de la transacción: es solo informativo).
+  await systemMessage(result.series, result.text).catch(() => undefined);
+  return { decided: result.decided };
 }
 
 export async function undoLastGameResult(seriesId: string, actorId: string) {

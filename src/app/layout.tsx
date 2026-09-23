@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Lilita_One, Nunito } from "next/font/google";
 import Image from "next/image";
 import Link from "next/link";
+import { DEFAULT_OG_IMAGE, siteUrl } from "@/lib/site";
 import "./globals.css";
 
 // Todas las páginas leen datos en vivo de MongoDB.
@@ -10,9 +11,21 @@ export const dynamic = "force-dynamic";
 const display = Lilita_One({ variable: "--font-display", weight: "400", subsets: ["latin"] });
 const body = Nunito({ variable: "--font-body", subsets: ["latin"], weight: ["600", "700", "800", "900"] });
 
+const DESCRIPTION = "Torneos 3v3 de Brawl Stars: equipos, bracket, partidas, mapas y resultados en vivo.";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl()),
   title: { default: "Brawl Tournament", template: "%s · Brawl Tournament" },
-  description: "Torneos 3v3 de Brawl Stars: equipos, bracket, partidas, mapas y resultados en vivo.",
+  description: DESCRIPTION,
+  openGraph: {
+    type: "website",
+    siteName: "Brawl Tournament",
+    locale: "es_BO",
+    title: "Brawl Tournament",
+    description: DESCRIPTION,
+    images: [{ url: DEFAULT_OG_IMAGE, width: 1200, height: 630 }],
+  },
+  twitter: { card: "summary_large_image", images: [DEFAULT_OG_IMAGE] },
 };
 
 export const viewport: Viewport = {

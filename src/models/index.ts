@@ -209,6 +209,8 @@ export interface TeamDoc {
   seed: number | null;
   adminNote: string;
   editTokenHash: string;
+  /** Código corto que el capitán usa para entrar a la sala de su partida. */
+  accessCode: string;
   ipHash: string;
   createdAt: Date;
   updatedAt: Date;
@@ -228,6 +230,7 @@ const teamSchema = defineSchema<TeamDoc>(
     seed: { type: Number, default: null },
     adminNote: { type: String, default: "" },
     editTokenHash: { type: String, required: true, index: true },
+    accessCode: { type: String, default: "" },
     ipHash: { type: String, default: "" },
   },
   { timestamps: true },
@@ -289,6 +292,23 @@ const gameSchema = defineSchema<GameDoc>(
  * Una serie es un enfrentamiento A vs B (BO1/BO3/BO5). Cada game (mapa individual) va embebido:
  * así registrar un game y recalcular el marcador es una sola escritura atómica.
  */
+export interface ReportDoc {
+  game: number;
+  team: Types.ObjectId;
+  winnerSlot: "A" | "B";
+  createdAt: Date;
+}
+
+const reportSchema = defineSchema<ReportDoc>(
+  {
+    game: { type: Number, required: true },
+    team: { type: ObjectId, ref: "Team", required: true },
+    winnerSlot: { type: String, enum: ["A", "B"], required: true },
+    createdAt: { type: Date, default: Date.now },
+  },
+  { _id: false },
+);
+
 export interface SeriesDoc {
   _id: Types.ObjectId;
   tournament: Types.ObjectId;
@@ -308,6 +328,8 @@ export interface SeriesDoc {
   nextKey: string | null;
   nextSlot: SlotValue;
   games: GameDoc[];
+  /** Resultados reportados por los equipos; el árbitro los confirma. */
+  reports: ReportDoc[];
   scheduledAt: Date | null;
   notes: string;
   createdAt: Date;
@@ -333,6 +355,7 @@ const seriesSchema = defineSchema<SeriesDoc>(
     nextKey: { type: String, default: null },
     nextSlot: { type: String, enum: ["A", "B", null], default: null },
     games: { type: [gameSchema], default: [] },
+    reports: { type: [reportSchema], default: [] },
     scheduledAt: { type: Date, default: null },
     notes: { type: String, default: "" },
   },
@@ -382,3 +405,32 @@ const eventSchema = defineSchema<EventDoc>({
 });
 eventSchema.index({ tournament: 1, createdAt: -1 });
 export const TournamentEvent = getModel<EventDoc>("TournamentEvent", eventSchema);
+
+/* ─────────────────────────── Sala de partida (chat entre rivales y árbitro) ─────────────────────────── */
+
+export interface ChatMessageDoc {
+  _id: Types.ObjectId;
+  tournament: Types.ObjectId;
+  series: Types.ObjectId;
+  authorType: "team" | "staff" | "system";
+  team: Types.ObjectId | null;
+  authorName: string;
+  text: string;
+  hasImage: boolean;
+  image: { data: Buffer; contentType: string } | null;
+  createdAt: Date;
+}
+
+const chatMessageSchema = defineSchema<ChatMessageDoc>({
+  tournament: { type: ObjectId, ref: "Tournament", required: true },
+  series: { type: ObjectId, ref: "Series", required: true },
+  authorType: { type: String, enum: ["team", "staff", "system"], required: true },
+  team: { type: ObjectId, ref: "Team", default: null },
+  authorName: { type: String, required: true },
+  text: { type: String, default: "" },
+  hasImage: { type: Boolean, default: false },
+  image: { type: { data: Buffer, contentType: String }, default: null },
+  createdAt: { type: Date, default: Date.now },
+});
+chatMessageSchema.index({ series: 1, createdAt: 1 });
+export const ChatMessage = getModel<ChatMessageDoc>("ChatMessage", chatMessageSchema);

@@ -1,15 +1,18 @@
 import { ActionForm, SubmitButton } from "@/components/action-form";
 import { Collapsible } from "@/components/admin/collapsible";
+import { CopyButton } from "@/components/copy-button";
 import { RegistrationForm } from "@/components/registration-form";
 import { EmptyState, StatusBadge, TeamLogo } from "@/components/ui";
 import { requireStaffPage } from "@/lib/auth";
 import { COMPETITION_STATUS, MEMBER_ROLE_LABEL, REGISTRATION_STATUS } from "@/lib/labels";
 import { getTeamsForAdmin } from "@/lib/queries";
+import { ensureAccessCodes } from "@/lib/services/room";
 import { timeAgo } from "@/lib/utils";
 import type { TeamAdminView } from "@/lib/views";
 import {
   adminUpdateTeamAction,
   importTeamsAction,
+  regenerateCodeAction,
   disqualifyTeamAction,
   reviewRegistrationAction,
   setTeamSeedAction,
@@ -57,7 +60,14 @@ export default async function RegistrationsPage({ params }: { params: Promise<{ 
   await requireStaffPage(["admin"]);
   const { slug } = await params;
   const { tournament } = await loadAdminTournament(slug);
+  await ensureAccessCodes(tournament.id);
   const teams = await getTeamsForAdmin(tournament.id);
+  const approvedTeams = teams.filter((t) => t.registrationStatus === "approved");
+  const roomUrl = `{origin}/torneos/${slug}/partidas`;
+  const codeMessage = (t: { name: string; accessCode: string }) =>
+    `Hola ${t.name}! Este es el código de su equipo para la sala de partidas del ${tournament.name}: ${t.accessCode}\n` +
+    `Entren a su partida en ${roomUrl}, toquen su equipo y pongan el código. Ahí chatean con el rival, pasan el link del equipo y reportan el resultado. No lo compartan.`;
+  const allCodes = approvedTeams.map((t) => `${t.name}: ${t.accessCode}`).join("\n");
   const locked = !!tournament.bracketGeneratedAt;
   const approvedCount = teams.filter((t) => t.registrationStatus === "approved").length;
 
@@ -92,6 +102,33 @@ export default async function RegistrationsPage({ params }: { params: Promise<{ 
   return (
     <div className="space-y-8">
       {importCard}
+      {approvedTeams.length ? (
+        <Collapsible
+          className="card p-4"
+          summary={<summary className="cursor-pointer font-extrabold">Códigos de acceso a la sala de partidas ({approvedTeams.length})</summary>}
+        >
+          <p className="mt-2 text-sm text-muted">
+            Cada capitán entra a la página de su partida con este código para chatear con el rival y reportar resultados.
+            Envíaselo por privado (botón “Mensaje”).
+          </p>
+          <ul className="mt-3 divide-y-2 divide-ink/50">
+            {approvedTeams.map((t) => (
+              <li key={t.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
+                <span className="min-w-0 truncate font-extrabold">{t.name}</span>
+                <span className="flex items-center gap-2">
+                  <span className="rounded-lg border-2 border-ink bg-bg-soft px-2 py-1 font-mono text-lg tracking-widest">{t.accessCode}</span>
+                  <CopyButton text={codeMessage(t)} label="Mensaje" />
+                  <ActionForm action={regenerateCodeAction} confirm={`¿Generar un código nuevo para ${t.name}? El anterior deja de funcionar.`} showSuccess={false}>
+                    <input type="hidden" name="teamId" value={t.id} />
+                    <SubmitButton className="btn-ghost btn-sm" pendingText="…">Nuevo</SubmitButton>
+                  </ActionForm>
+                </span>
+              </li>
+            ))}
+          </ul>
+          <CopyButton text={allCodes} label="Copiar todos los códigos" className="mt-3 w-full" />
+        </Collapsible>
+      ) : null}
       {teams.length === 0 ? (
         <EmptyState title="Todavía no hay inscripciones">
           {tournament.status === "registration_open"
