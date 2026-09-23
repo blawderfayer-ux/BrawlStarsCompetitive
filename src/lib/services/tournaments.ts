@@ -11,6 +11,7 @@ import {
 import { connectDB } from "../db";
 import { slugify } from "../utils";
 import {
+  ChatMessage,
   GameMap,
   Series,
   Team,
@@ -140,8 +141,8 @@ export async function deleteTournament(id: string) {
   return withTransaction(async (session) => {
     const t = await Tournament.findById(id).session(session);
     if (!t) throw new UserError("El torneo no existe.");
-    if (t.status !== "draft" && t.status !== "cancelled") {
-      throw new UserError("Solo se pueden eliminar torneos en borrador o cancelados.");
+    if (!["draft", "cancelled", "finished"].includes(t.status)) {
+      throw new UserError("Solo se pueden eliminar torneos en borrador, cancelados o finalizados.");
     }
     const opts = { session: session ?? undefined };
     const teams = await Team.find({ tournament: t._id }, { _id: 1 }).session(session).lean();
@@ -149,6 +150,7 @@ export async function deleteTournament(id: string) {
     await Team.deleteMany({ tournament: t._id }, opts);
     await Series.deleteMany({ tournament: t._id }, opts);
     await TournamentEvent.deleteMany({ tournament: t._id }, opts);
+    await ChatMessage.deleteMany({ tournament: t._id }, opts);
     await Tournament.deleteOne({ _id: t._id }, opts);
   });
 }
