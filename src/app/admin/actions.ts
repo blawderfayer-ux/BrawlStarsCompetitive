@@ -2,12 +2,8 @@
 
 import { redirect } from "next/navigation";
 import { file, num, runAction, str, type ActionResult } from "@/lib/action-result";
-import {
-  createSession,
-  destroySession,
-  requireStaff,
-  verifyPassword,
-} from "@/lib/auth";
+import { createSession, destroySession, requireStaff } from "@/lib/auth";
+import { verifyPassword } from "@/lib/password";
 import type { Slot } from "@/lib/bracket";
 import { connectDB } from "@/lib/db";
 import { parseRegistrationForm } from "@/lib/registration-form";

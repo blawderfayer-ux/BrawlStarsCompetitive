@@ -10,7 +10,7 @@ import {
 } from "@/lib/services/registrations";
 
 export async function registerTeamAction(
-  _prev: ActionResult<{ token: string }> | null,
+  _prev: ActionResult | null,
   form: FormData,
 ): Promise<ActionResult<{ token: string }>> {
   // Trampa para bots: un campo oculto que las personas no llenan.

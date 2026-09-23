@@ -3,7 +3,7 @@ import { connectDB } from "../db";
 import { DEFAULT_MODES } from "../catalog";
 import { slugify } from "../utils";
 import { GameMap, GameMode, User, type StaffRole, STAFF_ROLES } from "@/models";
-import { hashPassword } from "../auth";
+import { hashPassword } from "../password";
 import { UserError } from "./tx";
 
 /** Carga los modos y mapas del BSC 2026 si todavía no existen (idempotente). */

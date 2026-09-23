@@ -1,5 +1,4 @@
 import "server-only";
-import bcrypt from "bcryptjs";
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -23,14 +22,6 @@ export interface StaffUser {
   name: string;
   email: string;
   role: StaffRole;
-}
-
-export async function hashPassword(password: string) {
-  return bcrypt.hash(password, 12);
-}
-
-export async function verifyPassword(password: string, hash: string) {
-  return bcrypt.compare(password, hash);
 }
 
 export async function createSession(userId: string) {
