@@ -29,10 +29,27 @@ export default async function TournamentLayout({
   return (
     <>
       <section className="relative isolate overflow-hidden border-b-[3px] border-ink">
-        <Image src="/img/hero.webp" alt="" fill priority sizes="100vw" className="-z-20 object-cover object-[85%_30%]" />
-        <div className="halftone absolute inset-0 -z-10 opacity-60" aria-hidden />
-        <div className="absolute inset-0 -z-10 bg-gradient-to-t from-bg via-bg/75 to-bg/20" aria-hidden />
-        <Container className="pt-10 pb-5">
+        {tournament.posterUrl ? (
+          // Con afiche: se muestra recortado en la parte de arriba (logo y título del torneo).
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={tournament.posterUrl}
+            alt=""
+            className="absolute inset-0 -z-20 h-full w-full object-cover object-[50%_8%] sm:object-[50%_18%]"
+          />
+        ) : (
+          <Image src="/img/hero.webp" alt="" fill priority sizes="100vw" className="-z-20 object-cover object-[85%_30%]" />
+        )}
+        <div className="halftone absolute inset-0 -z-10 opacity-40" aria-hidden />
+        <div
+          className={
+            tournament.posterUrl
+              ? "absolute inset-0 -z-10 bg-gradient-to-t from-bg via-bg/70 via-40% to-transparent"
+              : "absolute inset-0 -z-10 bg-gradient-to-t from-bg via-bg/75 to-bg/20"
+          }
+          aria-hidden
+        />
+        <Container className={tournament.posterUrl ? "pt-56 pb-5 sm:pt-72" : "pt-10 pb-5"}>
           <div className="flex items-center gap-2">
             <StatusBadge map={TOURNAMENT_STATUS} value={tournament.status} />
             <span className="text-xs font-black uppercase tracking-wider text-white/80 drop-shadow-[0_1px_0_var(--ink)]">

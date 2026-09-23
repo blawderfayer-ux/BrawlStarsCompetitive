@@ -29,7 +29,7 @@ export default async function RulesPage({ params }: { params: Promise<{ slug: st
       <section>
         <SectionTitle>Reglamento</SectionTitle>
         {tournament.rules ? (
-          <div className="card whitespace-pre-line p-4 text-sm leading-relaxed">{tournament.rules}</div>
+          <div className="card whitespace-pre-line [overflow-wrap:anywhere] p-4 text-sm leading-relaxed">{tournament.rules}</div>
         ) : (
           <EmptyState title="La organización todavía no publicó el reglamento" />
         )}
