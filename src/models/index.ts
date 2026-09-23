@@ -184,6 +184,8 @@ export interface Member {
   name: string;
   tag: string;
   role: (typeof MEMBER_ROLES)[number];
+  /** true = estudiante de la FICCT, false = de otra facultad, null = sin dato. */
+  ficct: boolean | null;
 }
 
 const memberSchema = defineSchema<Member>(
@@ -191,6 +193,7 @@ const memberSchema = defineSchema<Member>(
     name: { type: String, required: true, trim: true },
     tag: { type: String, default: "", uppercase: true, trim: true },
     role: { type: String, enum: MEMBER_ROLES, default: "player" },
+    ficct: { type: Boolean, default: null },
   },
   { _id: false },
 );
@@ -208,6 +211,9 @@ export interface TeamDoc {
   competitionStatus: CompetitionStatus;
   seed: number | null;
   adminNote: string;
+  /** Control del día del torneo: pagó la entrada / mostró los carnets. */
+  paid: boolean;
+  idsChecked: boolean;
   editTokenHash: string;
   /** Código corto que el capitán usa para entrar a la sala de su partida. */
   accessCode: string;
@@ -229,6 +235,8 @@ const teamSchema = defineSchema<TeamDoc>(
     competitionStatus: { type: String, enum: COMPETITION_STATUSES, default: "registered" },
     seed: { type: Number, default: null },
     adminNote: { type: String, default: "" },
+    paid: { type: Boolean, default: false },
+    idsChecked: { type: Boolean, default: false },
     editTokenHash: { type: String, required: true, index: true },
     accessCode: { type: String, default: "" },
     ipHash: { type: String, default: "" },

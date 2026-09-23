@@ -10,6 +10,7 @@ import { UserError } from "./tx";
 
 
 const memberSchema = z.object({
+  ficct: z.boolean().nullable().default(null),
   name: z.string().trim().min(1, "Falta el nombre de un jugador").max(40),
   tag: z
     .string()
@@ -313,3 +314,9 @@ export async function importTeams(tournamentId: string, text: string, approve: b
 }
 
 const TEAM_COLORS = ["#3b82f6", "#ef4444", "#22c55e", "#eab308", "#a855f7", "#f97316", "#06b6d4", "#ec4899"];
+
+/** Control del día del torneo: pagó la entrada / mostró los carnets. */
+export async function setTeamCheck(teamId: string, field: "paid" | "idsChecked", value: boolean) {
+  await connectDB();
+  await Team.updateOne({ _id: teamId }, { $set: { [field]: value } });
+}

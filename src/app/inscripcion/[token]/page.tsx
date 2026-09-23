@@ -89,7 +89,7 @@ export default async function MyRegistrationPage({ params }: { params: Promise<{
               teamName: team.name,
               color: team.color,
               captainContact: team.captainContact,
-              members: team.members.map((m) => ({ name: m.name, tag: m.tag, role: m.role })),
+              members: team.members.map((m) => ({ name: m.name, tag: m.tag, role: m.role, ficct: m.ficct ?? null })),
               logoUrl,
             }}
           />

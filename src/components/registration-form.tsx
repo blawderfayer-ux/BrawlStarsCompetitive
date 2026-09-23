@@ -39,10 +39,12 @@ function PlayerFields({
   title,
   optional,
   tagRequired,
+  ficctRequired,
   defaults,
 }: {
   uid: string;
   tagRequired?: boolean;
+  ficctRequired?: boolean;
   prefix: string;
   title: string;
   optional?: boolean;
@@ -84,6 +86,30 @@ function PlayerFields({
             autoCapitalize="characters"
             defaultValue={defaults?.tag}
           />
+        </div>
+      </div>
+      <div className="mt-3">
+        <span className="label">¿Es estudiante de la FICCT?</span>
+        <div className="grid grid-cols-2 gap-2">
+          {[
+            { value: "yes", label: "Sí, FICCT", on: "has-[:checked]:bg-ok has-[:checked]:text-ink" },
+            { value: "no", label: "Otra facultad", on: "has-[:checked]:bg-red has-[:checked]:text-white" },
+          ].map((o) => (
+            <label
+              key={o.value}
+              className={`font-display flex min-h-[44px] cursor-pointer items-center justify-center rounded-xl border-2 border-ink bg-bg-soft text-sm uppercase ${o.on}`}
+            >
+              <input
+                type="radio"
+                name={`${prefix}Ficct`}
+                value={o.value}
+                className="sr-only"
+                required={ficctRequired}
+                defaultChecked={defaults ? (o.value === "yes" ? defaults.ficct === true : defaults.ficct === false) : false}
+              />
+              {o.label}
+            </label>
+          ))}
         </div>
       </div>
     </fieldset>
@@ -213,11 +239,12 @@ export function RegistrationForm({
           </div>
         </section>
 
-        <PlayerFields uid={uid} prefix="captain" title="Capitán (jugador 1)" defaults={captain} />
+        <PlayerFields uid={uid} ficctRequired={!admin} prefix="captain" title="Capitán (jugador 1)" defaults={captain} />
         {Array.from({ length: teamSize - 1 }, (_, i) => (
           <PlayerFields
             key={i}
             uid={uid}
+            ficctRequired={!admin}
             prefix={`player${i + 2}`}
             title={`Jugador ${i + 2}`}
             optional={admin}

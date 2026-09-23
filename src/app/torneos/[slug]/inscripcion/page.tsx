@@ -21,7 +21,8 @@ export default async function RegisterPage({ params }: { params: Promise<{ slug:
     <div className="mx-auto max-w-xl">
       <h2 className="font-display text-2xl">Inscribir mi equipo</h2>
       <p className="mb-4 text-sm text-muted">
-        Completa los datos de tu equipo de {tournament.teamSize}. La organización revisará la inscripción y, cuando la
+        Completa los datos de tu equipo de {tournament.teamSize}. Si al menos 2 titulares son de la FICCT, el equipo no
+        paga; si no, la entrada es de 10 Bs por equipo (se verifica con carnet el día del torneo). La organización revisará la inscripción y, cuando la
         apruebe, tu equipo aparecerá en la lista oficial.
       </p>
       <RegisterClient slug={slug} teamSize={tournament.teamSize} />
