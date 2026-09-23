@@ -88,6 +88,17 @@ export async function logoutAction() {
 
 /* ─────────────── Torneos ─────────────── */
 
+/** Solo rutas internas (/img/…) o URLs https, para no inyectar esquemas raros en <img>. */
+function safePosterUrl(value: string) {
+  if (!value) return "";
+  if (value.startsWith("/") && !value.startsWith("//")) return value;
+  try {
+    return new URL(value).protocol === "https:" ? value : "";
+  } catch {
+    return "";
+  }
+}
+
 function tournamentInput(form: FormData): TournamentInput {
   const bestOfByRound = str(form, "bestOfByRound")
     .split(/[,\s]+/)
@@ -103,6 +114,7 @@ function tournamentInput(form: FormData): TournamentInput {
     bestOfByRound,
     roundDurationMinutes: Math.max(5, num(form, "roundDurationMinutes", 30)),
     rules: str(form, "rules"),
+    posterUrl: safePosterUrl(str(form, "posterUrl")),
   };
 }
 
@@ -204,7 +216,7 @@ export async function importTeamsAction(_prev: Result, form: FormData): Promise<
   });
   if (!res.ok || !res.data) return res;
   const r = res.data as { created: string[]; skipped: string[]; incomplete: string[] };
-  const parts = [`✅ ${r.created.length} equipos importados.`];
+  const parts = [`${r.created.length} equipos importados.`];
   if (r.skipped.length) parts.push(`Ya existían (omitidos): ${r.skipped.join(", ")}.`);
   if (r.incomplete.length) parts.push(`Con menos de 3 jugadores: ${r.incomplete.join(", ")}.`);
   return { ok: true, message: parts.join(" ") };

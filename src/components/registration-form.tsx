@@ -1,5 +1,6 @@
 "use client";
 
+import { Shield } from "lucide-react";
 import { useActionState, useId, useRef, useState } from "react";
 import type { ActionResult } from "@/lib/action-result";
 import { PendingProvider, SubmitButton, useActionSubmit } from "./action-form";
@@ -167,7 +168,7 @@ export function RegistrationForm({
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={preview} alt="" className="h-full w-full object-cover" />
               ) : (
-                "🛡️"
+                <Shield size={32} className="text-muted" />
               )}
             </button>
             <div className="min-w-0">
@@ -212,18 +213,18 @@ export function RegistrationForm({
           </div>
         </section>
 
-        <PlayerFields uid={uid} prefix="captain" title="👑 Capitán (jugador 1)" defaults={captain} />
+        <PlayerFields uid={uid} prefix="captain" title="Capitán (jugador 1)" defaults={captain} />
         {Array.from({ length: teamSize - 1 }, (_, i) => (
           <PlayerFields
             key={i}
             uid={uid}
             prefix={`player${i + 2}`}
-            title={`👤 Jugador ${i + 2}`}
+            title={`Jugador ${i + 2}`}
             optional={admin}
             defaults={players[i]}
           />
         ))}
-        <PlayerFields uid={uid} prefix="sub" title="🔁 Suplente" optional defaults={sub} />
+        <PlayerFields uid={uid} prefix="sub" title="Suplente" optional defaults={sub} />
 
         <section className="card p-4">
           <label className="label" htmlFor={`${uid}captainContact`}>

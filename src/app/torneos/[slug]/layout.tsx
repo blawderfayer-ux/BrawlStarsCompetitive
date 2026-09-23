@@ -1,4 +1,6 @@
+import { CalendarDays, Shield, Users } from "lucide-react";
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { AutoRefresh, EventToasts } from "@/components/live";
 import { TournamentNav } from "@/components/tournament-nav";
@@ -25,35 +27,54 @@ export default async function TournamentLayout({
   const live = tournament.status === "live";
 
   return (
-    <Container className="py-4">
-      <div className="mb-4">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <p className="text-xs font-extrabold uppercase tracking-wider text-muted">Torneo Brawl Stars</p>
-            <h1 className="font-display text-2xl leading-tight sm:text-3xl">{tournament.name}</h1>
+    <>
+      <section className="relative isolate overflow-hidden border-b-[3px] border-ink">
+        <Image src="/img/hero.webp" alt="" fill priority sizes="100vw" className="-z-20 object-cover object-[85%_30%]" />
+        <div className="halftone absolute inset-0 -z-10 opacity-60" aria-hidden />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-t from-bg via-bg/75 to-bg/20" aria-hidden />
+        <Container className="pt-10 pb-5">
+          <div className="flex items-center gap-2">
+            <StatusBadge map={TOURNAMENT_STATUS} value={tournament.status} />
+            <span className="text-xs font-black uppercase tracking-wider text-white/80 drop-shadow-[0_1px_0_var(--ink)]">
+              Brawl Stars · 3v3
+            </span>
           </div>
-          <StatusBadge map={TOURNAMENT_STATUS} value={tournament.status} className="mt-1" />
-        </div>
-        <p className="mt-1 text-sm text-muted">
-          🛡️ {tournament.approvedTeams} equipos · 3v3 · BO{tournament.defaultBestOf}
-          {tournament.startsAt ? ` · 📅 ${formatDateTime(tournament.startsAt)}` : ""}
-        </p>
-        {tournament.status === "registration_open" ? (
-          <Link href={`/torneos/${slug}/inscripcion`} className="btn btn-primary mt-3 w-full sm:w-auto">
-            📝 Inscribir mi equipo
-          </Link>
-        ) : null}
+          <h1 className="title-ink mt-2 text-4xl leading-none text-white sm:text-5xl">{tournament.name}</h1>
+          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm font-extrabold text-white/90 drop-shadow-[0_1px_0_var(--ink)]">
+            <span className="inline-flex items-center gap-1.5">
+              <Users size={16} /> {tournament.approvedTeams} equipos
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <Shield size={16} /> BO{tournament.defaultBestOf}
+            </span>
+            {tournament.startsAt ? (
+              <span className="inline-flex items-center gap-1.5">
+                <CalendarDays size={16} /> {formatDateTime(tournament.startsAt)}
+              </span>
+            ) : null}
+          </div>
+          {tournament.status === "registration_open" ? (
+            <Link href={`/torneos/${slug}/inscripcion`} className="btn btn-primary mt-4 w-full sm:w-auto">
+              Inscribir mi equipo
+            </Link>
+          ) : null}
+        </Container>
+      </section>
+
+      <div className="sticky top-14 z-20 border-b-[3px] border-ink bg-[#0b1340]/95 backdrop-blur">
+        <Container className="pt-2">
+          <TournamentNav slug={slug} />
+        </Container>
       </div>
-      <div className="sticky top-14 z-20 -mx-4 mb-4 bg-bg/90 px-4 py-2 backdrop-blur">
-        <TournamentNav slug={slug} />
-      </div>
-      {children}
+
+      <Container className="py-6">{children}</Container>
+
       {live ? (
         <>
           <AutoRefresh seconds={20} />
           <EventToasts slug={slug} />
         </>
       ) : null}
-    </Container>
+    </>
   );
 }

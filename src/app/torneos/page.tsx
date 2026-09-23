@@ -23,8 +23,8 @@ export default async function TournamentsPage() {
                 <StatusBadge map={TOURNAMENT_STATUS} value={t.status} />
               </div>
               <p className="mt-1 text-sm text-muted">
-                🛡️ {t.approvedTeams}/{t.maxTeams} equipos · BO{t.defaultBestOf}
-                {t.startsAt ? ` · 📅 ${formatDateTime(t.startsAt)}` : ""}
+                {t.approvedTeams}/{t.maxTeams} equipos · BO{t.defaultBestOf}
+                {t.startsAt ? ` · ${formatDateTime(t.startsAt)}` : ""}
               </p>
             </Link>
           ))}

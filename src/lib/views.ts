@@ -96,6 +96,7 @@ export interface TournamentView {
   roundDurationMinutes: number;
   status: string;
   rules: string;
+  posterUrl: string;
   mapPool: string[];
   roundPlans: { modeId: string | null; mapId: string | null }[][];
   totalRounds: number;

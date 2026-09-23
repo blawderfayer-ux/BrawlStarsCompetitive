@@ -11,13 +11,13 @@ export default async function AuditLogPage({ params }: { params: Promise<{ slug:
   const { tournament } = await loadAdminTournament(slug);
   const events = await getPrivateEvents(tournament.id, 200);
 
-  if (events.length === 0) return <EmptyState icon="📜" title="Sin actividad" />;
+  if (events.length === 0) return <EmptyState title="Sin actividad" />;
   return (
     <ul className="card divide-y divide-line/70">
       {events.map((e) => (
         <li key={e.id} className="px-4 py-3">
           <p className="text-sm font-bold">
-            {e.public ? "" : "🔒 "}
+            {e.public ? "" : "[privado] "}
             {e.message}
           </p>
           <p className="text-xs text-muted">

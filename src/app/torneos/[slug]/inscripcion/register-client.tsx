@@ -1,5 +1,6 @@
 "use client";
 
+import { Hourglass } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { RegistrationForm } from "@/components/registration-form";
@@ -10,9 +11,7 @@ function SuccessPanel({ token, slug }: { token: string; slug: string }) {
   const url = typeof window !== "undefined" ? `${window.location.origin}/inscripcion/${token}` : `/inscripcion/${token}`;
   return (
     <div className="card pop-in space-y-4 p-5 text-center">
-      <div className="text-5xl" aria-hidden>
-        ⏳
-      </div>
+      <Hourglass size={44} className="mx-auto text-brand" />
       <p className="font-display text-2xl">¡Inscripción enviada!</p>
       <p className="text-sm">
         Estado: <span className="font-extrabold text-amber-300">PENDIENTE</span>. La organización revisará tu equipo.

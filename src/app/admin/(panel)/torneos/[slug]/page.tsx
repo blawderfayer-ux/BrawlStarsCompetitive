@@ -12,9 +12,9 @@ import {
 import { loadAdminTournament } from "./data";
 
 const NEXT_STATUS: Record<string, { status: string; label: string; className: string }[]> = {
-  draft: [{ status: "registration_open", label: "📝 Abrir inscripciones (publicar)", className: "btn-primary" }],
+  draft: [{ status: "registration_open", label: "Abrir inscripciones (publicar)", className: "btn-primary" }],
   registration_open: [
-    { status: "registration_closed", label: "🔒 Cerrar inscripciones", className: "btn-secondary" },
+    { status: "registration_closed", label: "Cerrar inscripciones", className: "btn-secondary" },
     { status: "draft", label: "Volver a borrador (ocultar)", className: "btn-ghost" },
   ],
   registration_closed: [{ status: "registration_open", label: "Reabrir inscripciones", className: "btn-ghost" }],
@@ -61,7 +61,7 @@ export default async function AdminTournamentSummary({ params }: { params: Promi
 
       {pending ? (
         <Link href={`/admin/torneos/${slug}/inscripciones`} className="card block border-amber-400/50 p-4 font-extrabold">
-          ⏳ Hay {pending} inscripciones pendientes de revisión →
+          Hay {pending} inscripciones pendientes de revisión →
         </Link>
       ) : null}
 
@@ -82,7 +82,7 @@ export default async function AdminTournamentSummary({ params }: { params: Promi
 
       {!tournament.bracketGeneratedAt && ["registration_open", "registration_closed"].includes(tournament.status) ? (
         <section className="card space-y-3 border-brand/50 p-4">
-          <p className="font-display text-xl">🏁 Generar bracket</p>
+          <p className="font-display text-xl">Generar bracket</p>
           <p className="text-sm text-muted">
             {approved.length} equipos aprobados → cuadro de {approved.length >= 2 ? size : "—"}
             {byes ? ` con ${byes} BYE (los mejores seeds avanzan directo a la ronda 2)` : ""}. Se crean todas las

@@ -8,7 +8,7 @@ export default async function MatchesPage({ params }: { params: Promise<{ slug: 
   const playable = series.filter((s) => !s.isBye);
 
   if (!tournament.bracketGeneratedAt || playable.length === 0) {
-    return <EmptyState icon="⚔️" title="Todavía no hay partidas" />;
+    return <EmptyState image="/img/vs.webp" title="Todavía no hay partidas" />;
   }
 
   const rounds = [...new Set(playable.map((s) => s.round))].sort((a, b) => a - b);

@@ -1,5 +1,6 @@
 "use client";
 
+import { Crown } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
@@ -160,9 +161,7 @@ export function BracketView({
     <div>
       {championName ? (
         <div className="card pop-in mb-4 flex items-center gap-3 border-brand/60 p-4">
-          <span className="text-4xl" aria-hidden>
-            🏆
-          </span>
+          <Crown size={40} className="text-brand" fill="currentColor" />
           <div>
             <div className="text-xs font-extrabold uppercase text-muted">Campeón</div>
             <div className="font-display text-2xl text-brand">{championName}</div>

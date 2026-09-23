@@ -16,7 +16,7 @@ export function MyTeamCard({ slug, teams, series }: { slug: string; teams: TeamV
   if (!team) {
     return (
       <div className="card p-4">
-        <p className="font-display text-lg">¿Cuál es tu equipo?</p>
+        <p className="title-ink text-xl">¿Cuál es tu equipo?</p>
         <p className="mb-3 text-sm text-muted">Elígelo y te mostraremos siempre tu próxima partida.</p>
         <select
           className="input"
@@ -39,31 +39,28 @@ export function MyTeamCard({ slug, teams, series }: { slug: string; teams: TeamV
   const last = [...mine].reverse().find((s) => s.winnerSlot);
 
   let headline = "Esperando rival";
-  if (team.competitionStatus === "champion") headline = "🏆 ¡Son campeones!";
+  if (team.competitionStatus === "champion") headline = "¡Son campeones!";
   else if (team.competitionStatus === "eliminated") headline = "Eliminados del torneo";
   else if (team.competitionStatus === "disqualified") headline = "Descalificados";
-  else if (next?.status === "live") headline = "🔴 ¡Están jugando ahora!";
+  else if (next?.status === "live") headline = "¡Están jugando ahora!";
   else if (next && next.teamA && next.teamB) headline = "Tu próxima partida";
 
   return (
-    <div className="card p-4">
+    <section>
       <div className="mb-3 flex items-center gap-3">
-        <TeamLogo team={team} size={44} />
+        <TeamLogo team={team} size={48} />
         <div className="min-w-0 flex-1">
-          <div className="text-xs font-extrabold uppercase text-muted">Mi equipo</div>
-          <Link href={`/torneos/${slug}/equipos/${team.slug}`} className="font-display block truncate text-xl">
+          <span className="tag-skew text-xs">
+            <span>Mi equipo · {headline}</span>
+          </span>
+          <Link href={`/torneos/${slug}/equipos/${team.slug}`} className="title-ink mt-1 block truncate text-2xl">
             {team.name}
           </Link>
         </div>
-        <button
-          type="button"
-          className="text-xs font-bold text-muted underline"
-          onClick={() => setTeamId(null)}
-        >
+        <button type="button" className="text-xs font-bold text-muted underline" onClick={() => setTeamId(null)}>
           Cambiar
         </button>
       </div>
-      <p className="mb-2 font-extrabold">{headline}</p>
       {next ? (
         <SeriesCard series={next} href={`/torneos/${slug}/partidas/${next.number}`} highlightTeamId={team.id} />
       ) : last ? (
@@ -71,7 +68,7 @@ export function MyTeamCard({ slug, teams, series }: { slug: string; teams: TeamV
       ) : (
         <p className="text-sm text-muted">El bracket todavía no se generó.</p>
       )}
-    </div>
+    </section>
   );
 }
 
@@ -84,7 +81,7 @@ export function SetMyTeamButton({ slug, teamId }: { slug: string; teamId: string
       className={mine ? "btn btn-ghost btn-sm" : "btn btn-secondary btn-sm"}
       onClick={() => setMyTeam(mine ? null : teamId)}
     >
-      {mine ? "✓ Es mi equipo" : "Es mi equipo"}
+      {mine ? "Es mi equipo" : "Es mi equipo"}
     </button>
   );
 }
