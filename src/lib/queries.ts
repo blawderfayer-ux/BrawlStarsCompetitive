@@ -64,7 +64,12 @@ function toTeamView(t: TeamDoc, record?: { wins: number; losses: number }): Team
 }
 
 export function toTeamAdminView(t: TeamDoc): TeamAdminView {
-  return { ...toTeamView(t), captainContact: t.captainContact ?? "", adminNote: t.adminNote ?? "" };
+  return {
+    ...toTeamView(t),
+    captainContact: t.captainContact ?? "",
+    adminNote: t.adminNote ?? "",
+    accessCode: t.accessCode ?? "",
+  };
 }
 
 function toTournamentView(t: TournamentDoc, approvedTeams: number): TournamentView {
@@ -211,6 +216,7 @@ function toSeriesView(
     nextSlot: (s.nextSlot as "A" | "B" | null) ?? null,
     scheduledAt: iso(s.scheduledAt),
     notes: s.notes ?? "",
+    reports: (s.reports ?? []).map((r) => ({ game: r.game, teamId: String(r.team), winnerSlot: r.winnerSlot })),
     games: (s.games ?? []).map((g) => ({
       number: g.number,
       status: g.status as "pending" | "finished" | "skipped",

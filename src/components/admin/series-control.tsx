@@ -1,3 +1,5 @@
+import { MessagesSquare } from "lucide-react";
+import Link from "next/link";
 import { ActionForm, SubmitButton } from "@/components/action-form";
 import { currentGameOf } from "@/components/series-card";
 import { ModeMapChip, StatusBadge, TeamLogo } from "@/components/ui";
@@ -50,16 +52,23 @@ export function SeriesControl({
   modes,
   maps,
   isAdmin,
+  slug,
 }: {
   series: SeriesView;
   modes: ModeView[];
   maps: MapView[];
   isAdmin: boolean;
+  slug: string;
 }) {
   const game = currentGameOf(s);
   const ready = !!(s.teamA && s.teamB);
   const finishedGames = s.games.filter((g) => g.status === "finished").length;
   const hidden = <input type="hidden" name="seriesId" value={s.id} />;
+  const reports = game ? s.reports.filter((r) => r.game === game.number) : [];
+  const nameById = (id: string) => (id === s.teamA?.id ? s.teamA?.name : s.teamB?.name) ?? "Equipo";
+  const nameBySlot = (slot: "A" | "B") => (slot === "A" ? s.teamA?.name : s.teamB?.name) ?? slot;
+  const agreed = reports.length === 2 && reports[0].winnerSlot === reports[1].winnerSlot ? reports[0].winnerSlot : null;
+  const disputed = reports.length === 2 && !agreed;
 
   return (
     <article className={cn("card space-y-4 p-4", s.status === "live" && "ring-2 ring-live/60")}>
@@ -96,6 +105,22 @@ export function SeriesControl({
           <div className="mb-3">
             <ModeMapChip mode={game.mode} map={game.map} size="md" />
           </div>
+          {reports.length ? (
+            <div
+              className={cn(
+                "mb-3 rounded-xl border-2 border-ink px-3 py-2 text-sm font-bold",
+                agreed ? "bg-ok/25" : disputed ? "bg-red/25" : "bg-card",
+              )}
+            >
+              {reports.map((r) => (
+                <p key={r.teamId}>
+                  {nameById(r.teamId)} reporta: ganó <span className="text-brand">{nameBySlot(r.winnerSlot)}</span>
+                </p>
+              ))}
+              {agreed ? <p className="mt-1 text-xs uppercase">Ambos coinciden: confirma abajo</p> : null}
+              {disputed ? <p className="mt-1 text-xs uppercase">No coinciden: revisa la captura en la sala</p> : null}
+            </div>
+          ) : null}
           <ActionForm action={reportGameAction} className="grid grid-cols-2 gap-2">
             {hidden}
             <input type="hidden" name="game" value={game.number} />
@@ -107,6 +132,12 @@ export function SeriesControl({
             </SubmitButton>
           </ActionForm>
         </section>
+      ) : null}
+
+      {ready ? (
+        <Link href={`/torneos/${slug}/partidas/${s.number}`} className="btn btn-secondary btn-sm w-full" target="_blank">
+          <MessagesSquare size={16} /> Abrir sala de la partida
+        </Link>
       ) : null}
 
       {/* Estado manual */}

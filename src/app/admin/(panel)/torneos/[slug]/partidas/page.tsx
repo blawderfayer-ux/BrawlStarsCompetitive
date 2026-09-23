@@ -73,7 +73,7 @@ export default async function AdminMatchesPage({
             s.winnerSlot && ver !== "todas" && ver !== "terminadas" ? (
               <SeriesCard key={s.id} series={s} />
             ) : (
-              <SeriesControl key={s.id} series={s} modes={modes} maps={maps} isAdmin={user.role === "admin"} />
+              <SeriesControl key={s.id} series={s} modes={modes} maps={maps} isAdmin={user.role === "admin"} slug={slug} />
             ),
           )}
         </div>

@@ -42,6 +42,7 @@ export interface TeamView {
 export interface TeamAdminView extends TeamView {
   captainContact: string;
   adminNote: string;
+  accessCode: string;
 }
 
 export interface GameView {
@@ -73,6 +74,8 @@ export interface SeriesView {
   scheduledAt: string | null;
   notes: string;
   games: GameView[];
+  /** Resultados reportados por los equipos (pendientes de confirmar por el árbitro). */
+  reports: { game: number; teamId: string; winnerSlot: "A" | "B" }[];
 }
 
 export interface EventView {

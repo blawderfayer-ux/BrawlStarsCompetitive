@@ -6,13 +6,27 @@ import { AutoRefresh, EventToasts } from "@/components/live";
 import { TournamentNav } from "@/components/tournament-nav";
 import { Container, StatusBadge } from "@/components/ui";
 import { TOURNAMENT_STATUS } from "@/lib/labels";
+import { ogImageFor } from "@/lib/site";
 import { formatDateTime } from "@/lib/utils";
 import { loadTournament } from "./data";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const { tournament } = await loadTournament(slug);
-  return { title: tournament.name, description: tournament.description || undefined };
+  const description =
+    tournament.description.split("\n").map((l) => l.trim()).filter(Boolean).slice(0, 3).join(" · ").slice(0, 180) ||
+    "Equipos, bracket, partidas y resultados en vivo.";
+  const image = ogImageFor(tournament.posterUrl);
+  return {
+    title: tournament.name,
+    description,
+    openGraph: {
+      title: tournament.name,
+      description,
+      images: [{ url: image, width: 1200, height: 630, alt: tournament.name }],
+    },
+    twitter: { card: "summary_large_image", title: tournament.name, description, images: [image] },
+  };
 }
 
 export default async function TournamentLayout({

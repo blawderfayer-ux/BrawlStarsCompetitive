@@ -3,8 +3,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { GamesList } from "@/components/series-detail";
 import { SeriesCard } from "@/components/series-card";
+import { MatchRoom, TeamLogin } from "@/components/match-room";
 import { SectionTitle } from "@/components/ui";
+import { getRoomAccess } from "@/lib/team-session";
 import { formatDateTime } from "@/lib/utils";
+import { reportResultAction, teamLoginAction, teamLogoutAction } from "../../../actions";
 import { loadTournament } from "../../data";
 
 export default async function MatchPage({ params }: { params: Promise<{ slug: string; number: string }> }) {
@@ -15,6 +18,12 @@ export default async function MatchPage({ params }: { params: Promise<{ slug: st
 
   const next = s.nextKey ? series.find((x) => x.key === s.nextKey) : null;
   const winner = s.winnerSlot === "A" ? s.teamA : s.winnerSlot === "B" ? s.teamB : null;
+
+  // Sala privada: solo cuando los dos equipos están definidos.
+  const hasRoom = !!(s.teamA && s.teamB) && s.status !== "cancelled";
+  const access = hasRoom ? await getRoomAccess({ teamA: s.teamA?.id, teamB: s.teamB?.id }) : { kind: "none" as const };
+  const current = s.games.find((g) => g.status === "pending");
+  const gameLabel = current ? `${current.mode?.name ?? "Modo"} · ${current.map?.name ?? "Mapa por definir"}` : "";
 
   return (
     <div className="space-y-6">
@@ -29,6 +38,31 @@ export default async function MatchPage({ params }: { params: Promise<{ slug: st
           {s.walkover ? <p className="font-bold text-muted">Resultado por walkover.</p> : null}
           {s.notes ? <p className="text-muted">{s.notes}</p> : null}
         </div>
+      ) : null}
+
+      {hasRoom && s.teamA && s.teamB ? (
+        access.kind === "none" ? (
+          <TeamLogin
+            action={teamLoginAction}
+            slug={slug}
+            tournamentId={tournament.id}
+            teams={[
+              { id: s.teamA.id, name: s.teamA.name },
+              { id: s.teamB.id, name: s.teamB.name },
+            ]}
+          />
+        ) : (
+          <MatchRoom
+            seriesId={s.id}
+            me={access.kind === "staff" ? { kind: "staff", name: access.name } : access}
+            teamA={{ id: s.teamA.id, name: s.teamA.name }}
+            teamB={{ id: s.teamB.id, name: s.teamB.name }}
+            reportAction={reportResultAction}
+            logoutAction={teamLogoutAction}
+            initialGame={current?.number ?? null}
+            gameLabel={gameLabel}
+          />
+        )
       ) : null}
 
       <section>

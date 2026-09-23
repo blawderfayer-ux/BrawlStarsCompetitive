@@ -45,6 +45,7 @@ import {
   type SeedingMethod,
   type TournamentInput,
 } from "@/lib/services/tournaments";
+import { regenerateAccessCode } from "@/lib/services/room";
 import { UserError } from "@/lib/services/tx";
 import { parseLocalDateTime } from "@/lib/utils";
 import { User, type StaffRole, type TournamentStatus } from "@/models";
@@ -220,6 +221,13 @@ export async function importTeamsAction(_prev: Result, form: FormData): Promise<
   if (r.skipped.length) parts.push(`Ya existían (omitidos): ${r.skipped.join(", ")}.`);
   if (r.incomplete.length) parts.push(`Con menos de 3 jugadores: ${r.incomplete.join(", ")}.`);
   return { ok: true, message: parts.join(" ") };
+}
+
+export async function regenerateCodeAction(_prev: Result, form: FormData): Promise<ActionResult> {
+  return runAction(async () => {
+    await requireStaff(["admin"]);
+    await regenerateAccessCode(str(form, "teamId"));
+  }, "Código nuevo generado.");
 }
 
 export async function setTeamSeedAction(_prev: Result, form: FormData): Promise<ActionResult> {
