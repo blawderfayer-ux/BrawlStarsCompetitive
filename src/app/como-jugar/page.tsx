@@ -31,8 +31,8 @@ export default function HowToPlayPage() {
 
       <div className="card overflow-hidden">
         <video
-          src="/tutorial.mp4"
-          poster="/img/tutorial-poster.jpg"
+          src="/tutorial.mp4?v=2"
+          poster="/img/tutorial-poster.jpg?v=2"
           controls
           playsInline
           preload="metadata"
