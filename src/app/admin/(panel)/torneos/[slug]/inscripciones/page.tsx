@@ -7,12 +7,14 @@ import { requireStaffPage } from "@/lib/auth";
 import { COMPETITION_STATUS, MEMBER_ROLE_LABEL, REGISTRATION_STATUS } from "@/lib/labels";
 import { getTeamsForAdmin } from "@/lib/queries";
 import { ensureAccessCodes } from "@/lib/services/room";
+import { ENTRY_FEE_BS, feeStatus } from "@/lib/entry-fee";
 import { timeAgo } from "@/lib/utils";
 import type { TeamAdminView } from "@/lib/views";
 import {
   adminUpdateTeamAction,
   importTeamsAction,
   regenerateCodeAction,
+  setTeamCheckAction,
   disqualifyTeamAction,
   reviewRegistrationAction,
   setTeamSeedAction,
@@ -26,6 +28,33 @@ const GROUPS = [
   { status: "rejected", title: "Rechazados" },
   { status: "withdrawn", title: "Retirados" },
 ];
+
+function EntryControl({ team }: { team: TeamAdminView }) {
+  const fee = feeStatus(team.members);
+  const toggle = (field: "paid" | "idsChecked", current: boolean, label: string) => (
+    <ActionForm action={setTeamCheckAction} showSuccess={false}>
+      <input type="hidden" name="teamId" value={team.id} />
+      <input type="hidden" name="field" value={field} />
+      <input type="hidden" name="value" value={String(!current)} />
+      <SubmitButton className={current ? "btn-ok btn-sm" : "btn-ghost btn-sm"} pendingText="…">
+        {current ? `✓ ${label}` : label}
+      </SubmitButton>
+    </ActionForm>
+  );
+  return (
+    <div className="flex flex-wrap items-center gap-2 rounded-xl border-2 border-ink bg-bg-soft p-2">
+      <span
+        className={`rounded-lg border-2 border-ink px-2 py-0.5 text-xs font-black uppercase ${
+          fee === "free" ? "bg-ok text-ink" : fee === "pays" ? (team.paid ? "bg-ok text-ink" : "bg-red text-white") : "bg-amber-400 text-ink"
+        }`}
+      >
+        {fee === "free" ? "FICCT · no paga" : fee === "pays" ? (team.paid ? `Pagó ${ENTRY_FEE_BS} Bs` : `Debe ${ENTRY_FEE_BS} Bs`) : "¿FICCT? sin dato"}
+      </span>
+      {fee !== "free" ? toggle("paid", team.paid, "Pagó") : null}
+      {toggle("idsChecked", team.idsChecked, "Carnets OK")}
+    </div>
+  );
+}
 
 function ReviewButtons({ team, locked }: { team: TeamAdminView; locked: boolean }) {
   const options = [
@@ -68,6 +97,9 @@ export default async function RegistrationsPage({ params }: { params: Promise<{ 
     `Hola ${t.name}! Este es el código de su equipo para la sala de partidas del ${tournament.name}: ${t.accessCode}\n` +
     `Entren a su partida en ${roomUrl}, toquen su equipo y pongan el código. Ahí chatean con el rival, pasan el link del equipo y reportan el resultado. No lo compartan.`;
   const allCodes = approvedTeams.map((t) => `${t.name}: ${t.accessCode}`).join("\n");
+  const owing = approvedTeams.filter((t) => feeStatus(t.members) === "pays" && !t.paid);
+  const unknownFee = approvedTeams.filter((t) => feeStatus(t.members) === "unknown");
+  const unchecked = approvedTeams.filter((t) => !t.idsChecked);
   const locked = !!tournament.bracketGeneratedAt;
   const approvedCount = teams.filter((t) => t.registrationStatus === "approved").length;
 
@@ -102,6 +134,24 @@ export default async function RegistrationsPage({ params }: { params: Promise<{ 
   return (
     <div className="space-y-8">
       {importCard}
+      {approvedTeams.length ? (
+        <section className="card p-4">
+          <p className="title-ink text-lg">Control de entrada ({ENTRY_FEE_BS} Bs si menos de 2 titulares son FICCT)</p>
+          <ul className="mt-2 space-y-1 text-sm font-bold">
+            <li className={owing.length ? "text-red-300" : "text-emerald-300"}>
+              {owing.length ? `Deben pagar y no pagaron: ${owing.map((t) => t.name).join(", ")}` : "Nadie debe la entrada."}
+            </li>
+            {unknownFee.length ? (
+              <li className="text-amber-300">
+                Falta saber si son FICCT: {unknownFee.map((t) => t.name).join(", ")} (edita el equipo y marca a cada jugador)
+              </li>
+            ) : null}
+            <li className="text-muted">
+              Carnets sin verificar: {unchecked.length ? unchecked.map((t) => t.name).join(", ") : "ninguno"}
+            </li>
+          </ul>
+        </section>
+      ) : null}
       {approvedTeams.length ? (
         <Collapsible
           className="card p-4"
@@ -171,12 +221,14 @@ export default async function RegistrationsPage({ params }: { params: Promise<{ 
                     {team.members.map((m, i) => (
                       <li key={i} className="flex justify-between gap-2">
                         <span className="truncate font-bold">
-                          {m.name} <span className="text-xs text-muted">({MEMBER_ROLE_LABEL[m.role]})</span>
+                          {m.name} <span className="text-xs text-muted">({MEMBER_ROLE_LABEL[m.role]}{m.ficct === true ? " · FICCT" : m.ficct === false ? " · otra fac." : ""})</span>
                         </span>
                         <span className="font-mono text-xs text-muted">{m.tag || "sin tag"}</span>
                       </li>
                     ))}
                   </ul>
+
+                  {team.registrationStatus === "approved" ? <EntryControl team={team} /> : null}
 
                   <ReviewButtons team={team} locked={locked} />
 

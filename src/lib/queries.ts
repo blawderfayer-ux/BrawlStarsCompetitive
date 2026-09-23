@@ -53,7 +53,12 @@ function toTeamView(t: TeamDoc, record?: { wins: number; losses: number }): Team
     color: t.color ?? "#3b82f6",
     hasLogo: !!t.hasLogo,
     logoUrl: t.hasLogo ? `/api/logos/${t._id}?v=${new Date(t.updatedAt ?? 0).getTime()}` : null,
-    members: (t.members ?? []).map((m) => ({ name: m.name, tag: m.tag, role: m.role as TeamView["members"][number]["role"] })),
+    members: (t.members ?? []).map((m) => ({
+      name: m.name,
+      tag: m.tag,
+      role: m.role as TeamView["members"][number]["role"],
+      ficct: m.ficct ?? null,
+    })),
     registrationStatus: t.registrationStatus,
     competitionStatus: t.competitionStatus,
     seed: t.seed ?? null,
@@ -69,6 +74,8 @@ export function toTeamAdminView(t: TeamDoc): TeamAdminView {
     captainContact: t.captainContact ?? "",
     adminNote: t.adminNote ?? "",
     accessCode: t.accessCode ?? "",
+    paid: !!t.paid,
+    idsChecked: !!t.idsChecked,
   };
 }
 

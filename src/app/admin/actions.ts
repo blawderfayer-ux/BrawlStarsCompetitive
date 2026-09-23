@@ -29,6 +29,7 @@ import {
   adminUpdateTeam,
   importTeams,
   reviewRegistration,
+  setTeamCheck,
   setTeamSeed,
   type ReviewAction,
 } from "@/lib/services/registrations";
@@ -228,6 +229,14 @@ export async function regenerateCodeAction(_prev: Result, form: FormData): Promi
     await requireStaff(["admin"]);
     await regenerateAccessCode(str(form, "teamId"));
   }, "Código nuevo generado.");
+}
+
+export async function setTeamCheckAction(_prev: Result, form: FormData): Promise<ActionResult> {
+  return runAction(async () => {
+    await requireStaff();
+    const field = str(form, "field") === "paid" ? "paid" : "idsChecked";
+    await setTeamCheck(str(form, "teamId"), field, str(form, "value") === "true");
+  });
 }
 
 export async function setTeamSeedAction(_prev: Result, form: FormData): Promise<ActionResult> {

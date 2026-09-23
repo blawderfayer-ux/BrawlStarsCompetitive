@@ -21,6 +21,7 @@ export interface MemberView {
   name: string;
   tag: string;
   role: "captain" | "player" | "sub";
+  ficct: boolean | null;
 }
 
 export interface TeamView {
@@ -43,6 +44,8 @@ export interface TeamAdminView extends TeamView {
   captainContact: string;
   adminNote: string;
   accessCode: string;
+  paid: boolean;
+  idsChecked: boolean;
 }
 
 export interface GameView {

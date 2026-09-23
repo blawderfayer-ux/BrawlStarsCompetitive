@@ -7,7 +7,11 @@ import { adminRegistrationSchema, registrationSchema, type RegistrationInput } f
  * Desde el panel (`admin`) se aceptan equipos incompletos y sin contacto.
  */
 export function parseRegistrationForm(form: FormData, teamSize: number, admin = false): RegistrationInput {
-  const member = (prefix: string) => ({ name: str(form, `${prefix}Name`), tag: str(form, `${prefix}Tag`) });
+  const member = (prefix: string) => ({
+    name: str(form, `${prefix}Name`),
+    tag: str(form, `${prefix}Tag`),
+    ficct: str(form, `${prefix}Ficct`) === "yes" ? true : str(form, `${prefix}Ficct`) === "no" ? false : null,
+  });
   let players = Array.from({ length: Math.max(0, teamSize - 1) }, (_, i) => member(`player${i + 2}`));
   if (admin) players = players.filter((p) => p.name || p.tag);
   const sub = member("sub");
