@@ -186,7 +186,7 @@ export interface Member {
 const memberSchema = defineSchema<Member>(
   {
     name: { type: String, required: true, trim: true },
-    tag: { type: String, required: true, uppercase: true, trim: true },
+    tag: { type: String, default: "", uppercase: true, trim: true },
     role: { type: String, enum: MEMBER_ROLES, default: "player" },
   },
   { _id: false },

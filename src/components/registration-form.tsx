@@ -37,9 +37,11 @@ function PlayerFields({
   prefix,
   title,
   optional,
+  tagRequired,
   defaults,
 }: {
   uid: string;
+  tagRequired?: boolean;
   prefix: string;
   title: string;
   optional?: boolean;
@@ -68,14 +70,14 @@ function PlayerFields({
         </div>
         <div>
           <label className="label" htmlFor={`${uid}${prefix}Tag`}>
-            ID / Tag del jugador
+            ID / Tag del jugador {tagRequired ? null : <span className="text-xs font-bold">(opcional)</span>}
           </label>
           <input
             id={`${uid}${prefix}Tag`}
             name={`${prefix}Tag`}
             className="input font-mono uppercase"
             placeholder="#2PP0Y8Q"
-            required={!optional}
+            required={!optional && tagRequired}
             maxLength={14}
             autoComplete="off"
             autoCapitalize="characters"
@@ -94,6 +96,7 @@ export function RegistrationForm({
   defaults,
   submitLabel = "Enviar inscripción",
   onSuccess,
+  admin = false,
 }: {
   action: (prev: ActionResult | null, form: FormData) => Promise<ActionResult>;
   hidden: Record<string, string>;
@@ -101,6 +104,8 @@ export function RegistrationForm({
   defaults?: RegistrationDefaults;
   submitLabel?: string;
   onSuccess?: (result: ActionResult) => React.ReactNode;
+  /** Desde el panel: jugadores 2..n y contacto opcionales (equipos incompletos o importados). */
+  admin?: boolean;
 }) {
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(defaults?.logoUrl ?? null);
@@ -214,6 +219,7 @@ export function RegistrationForm({
             uid={uid}
             prefix={`player${i + 2}`}
             title={`👤 Jugador ${i + 2}`}
+            optional={admin}
             defaults={players[i]}
           />
         ))}
@@ -228,7 +234,7 @@ export function RegistrationForm({
             name="captainContact"
             className="input"
             placeholder="WhatsApp, Discord o email"
-            required
+            required={!admin}
             maxLength={80}
             defaultValue={defaults?.captainContact}
           />

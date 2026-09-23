@@ -43,14 +43,14 @@ export default async function TeamPage({ params }: { params: Promise<{ slug: str
       <section>
         <SectionTitle>Jugadores</SectionTitle>
         <ul className="card divide-y divide-line/70">
-          {team.members.map((m) => (
-            <li key={m.tag} className="flex items-center justify-between gap-3 px-4 py-3">
+          {team.members.map((m, i) => (
+            <li key={i} className="flex items-center justify-between gap-3 px-4 py-3">
               <span className="flex min-w-0 items-center gap-2">
                 <span aria-hidden>{m.role === "captain" ? "👑" : m.role === "sub" ? "🔁" : "👤"}</span>
                 <span className="truncate font-extrabold">{m.name}</span>
               </span>
               <span className="shrink-0 text-right">
-                <span className="block font-mono text-xs text-muted">{m.tag}</span>
+                {m.tag ? <span className="block font-mono text-xs text-muted">{m.tag}</span> : null}
                 <span className="block text-[11px] font-bold uppercase text-muted">{MEMBER_ROLE_LABEL[m.role]}</span>
               </span>
             </li>
