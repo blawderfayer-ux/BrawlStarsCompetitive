@@ -68,7 +68,7 @@ export default async function AdminMatchesPage({
           {ver === "activas" && waiting.length ? `${waiting.length} partidas esperan a que se definan sus equipos.` : null}
         </EmptyState>
       ) : (
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           {sorted.map((s) =>
             s.winnerSlot && ver !== "todas" && ver !== "terminadas" ? (
               <SeriesCard key={s.id} series={s} />

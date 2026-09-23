@@ -129,6 +129,9 @@ export function TeamLogin({
         <SubmitButton className="btn-primary w-full" pendingText="Entrando…">
           Entrar a la sala
         </SubmitButton>
+        <a href="/como-jugar" className="block text-center text-xs font-bold text-muted underline">
+          ¿Primera vez? Mira el video de cómo jugar
+        </a>
       </form>
     </PendingProvider>
   );

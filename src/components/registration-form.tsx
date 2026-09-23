@@ -56,7 +56,7 @@ function PlayerFields({
       <p className="mb-3 font-extrabold">
         {title} {optional ? <span className="text-xs font-bold text-muted">(opcional)</span> : null}
       </p>
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div>
           <label className="label" htmlFor={`${uid}${prefix}Name`}>
             Nombre en el juego

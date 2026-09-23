@@ -62,7 +62,7 @@ export function TournamentForm({
           />
           <p className="mt-1 text-xs text-muted">Imagen que se muestra en la página del torneo.</p>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label className="label" htmlFor="startsAt">
               Fecha y hora de inicio
@@ -84,7 +84,7 @@ export function TournamentForm({
           Eliminación simple. Si los equipos no son potencia de 2 (4, 8, 16, 32…), los mejores seeds pasan por BYE.
           Doble eliminación y round robin quedan para una próxima versión.
         </p>
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label className="label" htmlFor="defaultBestOf">
               Formato de serie

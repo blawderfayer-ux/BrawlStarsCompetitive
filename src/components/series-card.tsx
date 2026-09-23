@@ -74,7 +74,7 @@ export function SeriesCard({
   const body = (
     <div className={cn("card overflow-hidden", series.status === "live" && "outline-[3px] outline-offset-0 outline-live outline")}>
       <div className="flex items-center justify-between gap-2 border-b-[2.5px] border-ink bg-card-hi px-3 py-2">
-        <span className="font-display truncate text-sm uppercase text-muted">
+        <span className="font-display min-w-0 truncate text-sm uppercase text-muted">
           {series.isBye ? "BYE" : `#${series.number}`} · {series.roundName} · <span className="text-text">BO{series.bestOf}</span>
         </span>
         <StatusBadge map={SERIES_STATUS} value={series.status} />

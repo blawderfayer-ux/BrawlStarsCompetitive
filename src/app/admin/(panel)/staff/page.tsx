@@ -58,7 +58,7 @@ export default async function StaffPage() {
 
       <section className="card p-4">
         <h2 className="font-display mb-3 text-xl">Agregar árbitro o admin</h2>
-        <ActionForm action={createStaffAction} className="grid gap-3 sm:grid-cols-2" resetOnSuccess>
+        <ActionForm action={createStaffAction} className="grid grid-cols-1 gap-3 sm:grid-cols-2" resetOnSuccess>
           <input name="name" className="input" placeholder="Nombre" required />
           <input name="email" type="email" className="input" placeholder="Email" required autoComplete="off" />
           <input name="password" type="password" minLength={8} className="input" placeholder="Contraseña (mín. 8)" required autoComplete="new-password" />

@@ -51,9 +51,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               />
               <span className="title-ink text-xl leading-none text-brand">BRAWL TOURNAMENT</span>
             </Link>
-            <Link href="/torneos" className="font-display text-base uppercase text-muted">
-              Torneos
-            </Link>
+            <nav className="flex items-center gap-4">
+              <Link href="/como-jugar" className="font-display text-base uppercase text-muted">
+                Ayuda
+              </Link>
+              <Link href="/torneos" className="font-display text-base uppercase text-muted">
+                Torneos
+              </Link>
+            </nav>
           </div>
         </header>
         <div className="flex-1">{children}</div>
