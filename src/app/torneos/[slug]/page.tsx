@@ -69,7 +69,7 @@ export default async function TournamentHome({ params }: { params: Promise<{ slu
               Próximas partidas
             </SectionTitle>
             {upcoming.length ? (
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 {upcoming.map((s) => (
                   <SeriesCard key={s.id} series={s} href={`/torneos/${slug}/partidas/${s.number}`} />
                 ))}

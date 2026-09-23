@@ -25,7 +25,7 @@ export default async function MatchesPage({ params }: { params: Promise<{ slug: 
                 {done}/{list.length} jugadas · BO{list[0].bestOf}
               </span>
             </div>
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {list.map((s) => (
                 <SeriesCard key={s.id} series={s} href={`/torneos/${slug}/partidas/${s.number}`} />
               ))}

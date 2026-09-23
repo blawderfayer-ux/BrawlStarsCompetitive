@@ -41,7 +41,7 @@ export default async function RulesPage({ params }: { params: Promise<{ slug: st
           El modo y mapa de cada game lo define la organización y se muestra en cada partida. No se repite modo dentro de
           una misma serie.
         </p>
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {poolModes.map((mode) => (
             <div key={mode.id} className="card p-4">
               <div className="mb-2">

@@ -208,7 +208,7 @@ export function BracketView({
               );
             })}
           </div>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {inRound.map((s) => (
               <SeriesCard key={s.key} series={s} href={`/torneos/${slug}/partidas/${s.number}`} highlightTeamId={highlight} />
             ))}
