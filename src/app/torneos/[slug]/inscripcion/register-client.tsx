@@ -19,7 +19,8 @@ function SuccessPanel({ token, slug }: { token: string; slug: string }) {
       <div className="rounded-2xl bg-bg-soft p-4 text-left">
         <p className="text-sm font-extrabold">Guarda este enlace privado</p>
         <p className="mb-2 text-xs text-muted">
-          Con él puedes ver el estado de tu inscripción y corregirla si te lo piden. No lo compartas.
+          Con él puedes ver el estado de tu inscripción, corregirla si te lo piden y, cuando te aprueben, ver el
+          código de tu equipo para entrar a la sala de tus partidas. No lo compartas.
         </p>
         <p className="break-all rounded-lg bg-bg px-3 py-2 font-mono text-xs">{url}</p>
         <button

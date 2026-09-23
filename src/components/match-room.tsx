@@ -89,8 +89,8 @@ export function TeamLogin({
           <p className="title-ink text-xl">Sala de la partida</p>
         </div>
         <p className="text-sm text-muted">
-          ¿Juegas esta partida? Entra con el <b className="text-text">código de tu equipo</b> para chatear con tu rival,
-          pasar el link del equipo y reportar el resultado. Te lo da la organización.
+          ¿Juegas esta partida? Toca tu equipo y escribe su <b className="text-text">código</b> para chatear con tu rival,
+          pasar el link del equipo y reportar el resultado.
         </p>
         <input type="hidden" name="tournamentId" value={tournamentId} />
         <div className="grid grid-cols-2 gap-2">
@@ -107,15 +107,24 @@ export function TeamLogin({
             </label>
           ))}
         </div>
-        <input
-          name="code"
-          required
-          maxLength={8}
-          autoComplete="off"
-          autoCapitalize="characters"
-          placeholder="Código (ej. K7M4QX)"
-          className="input text-center font-mono text-xl tracking-[0.3em] uppercase"
-        />
+        <div>
+          <label className="label" htmlFor="team-code">
+            Código de tu equipo (6 letras)
+          </label>
+          <input
+            id="team-code"
+            name="code"
+            required
+            maxLength={8}
+            autoComplete="off"
+            autoCapitalize="characters"
+            placeholder="ej: K7M4QX"
+            className="input text-center font-mono text-xl uppercase tracking-[0.3em] placeholder:text-base placeholder:tracking-normal placeholder:normal-case placeholder:text-muted/50"
+          />
+          <p className="mt-1 text-xs text-muted">
+            Lo ves en el enlace privado que recibiste al inscribirte, o te lo manda la organización por WhatsApp.
+          </p>
+        </div>
         {state && !state.ok ? <p className="rounded-lg bg-red/20 px-3 py-2 text-sm font-bold text-red-200">{state.error}</p> : null}
         <SubmitButton className="btn-primary w-full" pendingText="Entrando…">
           Entrar a la sala
