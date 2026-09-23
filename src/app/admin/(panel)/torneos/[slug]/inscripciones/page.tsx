@@ -1,4 +1,5 @@
 import { ActionForm, SubmitButton } from "@/components/action-form";
+import { Collapsible } from "@/components/admin/collapsible";
 import { RegistrationForm } from "@/components/registration-form";
 import { EmptyState, StatusBadge, TeamLogo } from "@/components/ui";
 import { requireStaffPage } from "@/lib/auth";
@@ -8,6 +9,7 @@ import { timeAgo } from "@/lib/utils";
 import type { TeamAdminView } from "@/lib/views";
 import {
   adminUpdateTeamAction,
+  importTeamsAction,
   disqualifyTeamAction,
   reviewRegistrationAction,
   setTeamSeedAction,
@@ -59,18 +61,44 @@ export default async function RegistrationsPage({ params }: { params: Promise<{ 
   const locked = !!tournament.bracketGeneratedAt;
   const approvedCount = teams.filter((t) => t.registrationStatus === "approved").length;
 
-  if (teams.length === 0) {
-    return (
-      <EmptyState icon="📝" title="Todavía no hay inscripciones">
-        {tournament.status === "registration_open"
-          ? `Comparte el enlace: /torneos/${slug}/inscripcion`
-          : "Abre las inscripciones desde el Resumen."}
-      </EmptyState>
-    );
-  }
+  const importCard = locked ? null : (
+    <Collapsible
+      className="card p-4"
+      defaultOpen={teams.length === 0}
+      summary={<summary className="cursor-pointer font-extrabold">📋 Importar equipos desde una lista</summary>}
+    >
+      <p className="mt-2 text-sm text-muted">
+        Pega la lista tal como la tienes (por ejemplo, del grupo de WhatsApp): una línea con el nombre del equipo y
+        debajo sus jugadores empezando con “-” o “•”. El tag es opcional (“-Juan #2PP0Y8Q”).
+      </p>
+      <ActionForm action={importTeamsAction} className="mt-3 space-y-3" resetOnSuccess>
+        <input type="hidden" name="id" value={tournament.id} />
+        <textarea
+          name="list"
+          required
+          className="input min-h-[220px] font-mono text-sm"
+          placeholder={"1.- Team Alpha\n-Jugador 1\n-Jugador 2\n-Jugador 3\n2.- Dragons\n-…"}
+        />
+        <label className="flex items-center gap-2 text-sm font-bold">
+          <input type="checkbox" name="approve" defaultChecked className="h-5 w-5" /> Aprobarlos directamente
+        </label>
+        <SubmitButton className="btn-secondary w-full" pendingText="Importando…">
+          Importar equipos
+        </SubmitButton>
+      </ActionForm>
+    </Collapsible>
+  );
 
   return (
     <div className="space-y-8">
+      {importCard}
+      {teams.length === 0 ? (
+        <EmptyState icon="📝" title="Todavía no hay inscripciones">
+          {tournament.status === "registration_open"
+            ? `Comparte el enlace: /torneos/${slug}/inscripcion`
+            : "Abre las inscripciones desde el Resumen."}
+        </EmptyState>
+      ) : null}
       <p className="text-sm font-bold text-muted">
         {approvedCount}/{tournament.maxTeams} equipos aprobados
         {locked ? " · Bracket generado: ya no se aprueban más equipos." : ""}
@@ -103,12 +131,12 @@ export default async function RegistrationsPage({ params }: { params: Promise<{ 
                   </header>
 
                   <ul className="grid gap-1 rounded-xl bg-bg-soft p-3 text-sm sm:grid-cols-2">
-                    {team.members.map((m) => (
-                      <li key={m.tag} className="flex justify-between gap-2">
+                    {team.members.map((m, i) => (
+                      <li key={i} className="flex justify-between gap-2">
                         <span className="truncate font-bold">
                           {m.name} <span className="text-xs text-muted">({MEMBER_ROLE_LABEL[m.role]})</span>
                         </span>
-                        <span className="font-mono text-xs text-muted">{m.tag}</span>
+                        <span className="font-mono text-xs text-muted">{m.tag || "sin tag"}</span>
                       </li>
                     ))}
                   </ul>
@@ -144,6 +172,7 @@ export default async function RegistrationsPage({ params }: { params: Promise<{ 
                       <RegistrationForm
                         action={adminUpdateTeamAction}
                         hidden={{ teamId: team.id }}
+                        admin
                         teamSize={tournament.teamSize}
                         submitLabel="Guardar equipo"
                         defaults={{

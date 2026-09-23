@@ -27,6 +27,7 @@ import {
 } from "@/lib/services/matches";
 import {
   adminUpdateTeam,
+  importTeams,
   reviewRegistration,
   setTeamSeed,
   type ReviewAction,
@@ -191,9 +192,22 @@ export async function reviewRegistrationAction(_prev: Result, form: FormData): P
 export async function adminUpdateTeamAction(_prev: Result, form: FormData): Promise<ActionResult> {
   return runAction(async () => {
     const user = await requireStaff(["admin"]);
-    const input = parseRegistrationForm(form, num(form, "teamSize", 3));
+    const input = parseRegistrationForm(form, num(form, "teamSize", 3), true);
     await adminUpdateTeam(str(form, "teamId"), input, file(form, "logo"), user.id);
   }, "Equipo actualizado.");
+}
+
+export async function importTeamsAction(_prev: Result, form: FormData): Promise<ActionResult> {
+  const res = await runAction(async () => {
+    const user = await requireStaff(["admin"]);
+    return importTeams(str(form, "id"), str(form, "list"), form.get("approve") === "on", user.id);
+  });
+  if (!res.ok || !res.data) return res;
+  const r = res.data as { created: string[]; skipped: string[]; incomplete: string[] };
+  const parts = [`✅ ${r.created.length} equipos importados.`];
+  if (r.skipped.length) parts.push(`Ya existían (omitidos): ${r.skipped.join(", ")}.`);
+  if (r.incomplete.length) parts.push(`Con menos de 3 jugadores: ${r.incomplete.join(", ")}.`);
+  return { ok: true, message: parts.join(" ") };
 }
 
 export async function setTeamSeedAction(_prev: Result, form: FormData): Promise<ActionResult> {

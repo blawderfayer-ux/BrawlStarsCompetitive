@@ -5,20 +5,16 @@ import { z } from "zod";
 import { connectDB } from "../db";
 import { slugify } from "../utils";
 import { Team, TeamLogo, Tournament, TournamentEvent, type RegistrationStatus } from "@/models";
+import { TAG_RE, normalizeTag, parseTeamList } from "./team-list";
 import { UserError } from "./tx";
 
-/** Tag de Brawl Stars: # seguido de letras/números (el juego usa 0289PYLQGRJCUV). */
-const TAG_RE = /^#?[0-9A-Z]{3,12}$/;
 
 const memberSchema = z.object({
   name: z.string().trim().min(1, "Falta el nombre de un jugador").max(40),
   tag: z
     .string()
-    .trim()
-    .toUpperCase()
-    .transform((t) => t.replace(/\s+/g, "").replace(/O/g, "0"))
-    .refine((t) => TAG_RE.test(t), "Tag inválido (ejemplo: #2PP0Y8Q)")
-    .transform((t) => (t.startsWith("#") ? t : `#${t}`)),
+    .transform(normalizeTag)
+    .refine((t) => t === "" || TAG_RE.test(t), "Tag inválido (ejemplo: #2PP0Y8Q)"),
 });
 
 export const registrationSchema = z.object({
@@ -31,6 +27,11 @@ export const registrationSchema = z.object({
 });
 export type RegistrationInput = z.infer<typeof registrationSchema>;
 
+/** Para el panel: el contacto puede quedar vacío (equipos importados). */
+export const adminRegistrationSchema = registrationSchema.extend({
+  captainContact: z.string().trim().max(80),
+});
+
 const LOGO_TYPES = ["image/png", "image/jpeg", "image/webp"];
 const LOGO_MAX_BYTES = 300 * 1024;
 
@@ -42,8 +43,8 @@ function hashIp(ip: string) {
   return createHash("sha256").update(`${process.env.SESSION_SECRET ?? ""}:${ip}`).digest("hex").slice(0, 32);
 }
 
-function buildMembers(input: RegistrationInput, teamSize: number) {
-  if (input.players.length !== teamSize - 1) {
+function buildMembers(input: RegistrationInput, teamSize: number, allowIncomplete = false) {
+  if (allowIncomplete ? input.players.length > teamSize - 1 : input.players.length !== teamSize - 1) {
     throw new UserError(`El equipo debe tener ${teamSize} jugadores titulares.`);
   }
   const members = [
@@ -51,7 +52,7 @@ function buildMembers(input: RegistrationInput, teamSize: number) {
     ...input.players.map((p) => ({ ...p, role: "player" as const })),
     ...(input.sub ? [{ ...input.sub, role: "sub" as const }] : []),
   ];
-  const tags = members.map((m) => m.tag);
+  const tags = members.map((m) => m.tag).filter(Boolean);
   if (new Set(tags).size !== tags.length) throw new UserError("Hay tags de jugador repetidos.");
   return members;
 }
@@ -61,6 +62,8 @@ async function assertNoDuplicates(tournamentId: Types.ObjectId, name: string, ta
   const base = { tournament: tournamentId, registrationStatus: active, ...(exceptTeam ? { _id: { $ne: exceptTeam } } : {}) };
   const sameName = await Team.findOne({ ...base, slug: slugify(name) }, { _id: 1 }).lean();
   if (sameName) throw new UserError("Ya hay un equipo inscrito con ese nombre.");
+  tags = tags.filter(Boolean);
+  if (tags.length === 0) return;
   const sameTag = await Team.findOne({ ...base, "members.tag": { $in: tags } }, { name: 1, members: 1 }).lean();
   if (sameTag) {
     const tag = sameTag.members.find((m) => tags.includes(m.tag))?.tag;
@@ -225,7 +228,7 @@ export async function adminUpdateTeam(teamId: string, input: RegistrationInput, 
   const team = await Team.findById(teamId);
   if (!team) throw new UserError("El equipo no existe.");
   const t = await Tournament.findById(team.tournament).lean();
-  const members = buildMembers(input, t?.teamSize ?? 3);
+  const members = buildMembers(input, t?.teamSize ?? 3, true);
   await assertNoDuplicates(team.tournament, input.teamName, members.map((m) => m.tag), team._id);
   if (await saveLogo(team._id, logo)) team.hasLogo = true;
   team.set({
@@ -249,3 +252,64 @@ export async function setTeamSeed(teamId: string, seed: number | null) {
   await connectDB();
   await Team.updateOne({ _id: teamId }, { $set: { seed: seed && seed > 0 ? seed : null } });
 }
+
+export interface ImportResult {
+  created: string[];
+  skipped: string[];
+  incomplete: string[];
+}
+
+/** Crea de una vez los equipos de una lista (por ejemplo, los inscritos por WhatsApp). */
+export async function importTeams(tournamentId: string, text: string, approve: boolean, actorId: string): Promise<ImportResult> {
+  await connectDB();
+  const t = await Tournament.findById(tournamentId).lean();
+  if (!t) throw new UserError("El torneo no existe.");
+  if (t.bracketGeneratedAt) throw new UserError("El bracket ya está generado: no se pueden agregar equipos.");
+  const parsed = parseTeamList(text);
+  if (parsed.length === 0) throw new UserError("No encontré equipos en el texto. Revisa el formato del ejemplo.");
+
+  const teamSize = t.teamSize ?? 3;
+  let approved = await Team.countDocuments({ tournament: t._id, registrationStatus: "approved" });
+  const result: ImportResult = { created: [], skipped: [], incomplete: [] };
+
+  for (const entry of parsed) {
+    const exists = await Team.exists({
+      tournament: t._id,
+      slug: slugify(entry.name),
+      registrationStatus: { $in: ["pending", "needs_changes", "approved"] as RegistrationStatus[] },
+    });
+    if (exists) {
+      result.skipped.push(entry.name);
+      continue;
+    }
+    const members = entry.players.map((p, i) => ({
+      name: p.name,
+      tag: p.tag,
+      role: (i === 0 ? "captain" : i < teamSize ? "player" : "sub") as "captain" | "player" | "sub",
+    }));
+    if (entry.players.length < teamSize) result.incomplete.push(entry.name);
+    const canApprove = approve && approved < t.maxTeams;
+    await Team.create({
+      tournament: t._id,
+      name: entry.name,
+      slug: await uniqueSlug(t._id, entry.name),
+      color: TEAM_COLORS[(approved + result.created.length) % TEAM_COLORS.length],
+      members,
+      registrationStatus: canApprove ? "approved" : "pending",
+      editTokenHash: hashToken(randomBytes(24).toString("base64url")),
+    });
+    if (canApprove) approved++;
+    result.created.push(entry.name);
+  }
+
+  await TournamentEvent.create({
+    tournament: t._id,
+    type: "registration_reviewed",
+    message: `Se importaron ${result.created.length} equipos.`,
+    public: false,
+    actor: actorId,
+  });
+  return result;
+}
+
+const TEAM_COLORS = ["#3b82f6", "#ef4444", "#22c55e", "#eab308", "#a855f7", "#f97316", "#06b6d4", "#ec4899"];

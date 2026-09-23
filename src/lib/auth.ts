@@ -11,8 +11,8 @@ const SESSION_DAYS = 7;
 
 function secretKey() {
   const secret = process.env.SESSION_SECRET;
-  if (!secret || secret.length < 32) {
-    throw new Error("SESSION_SECRET debe tener al menos 32 caracteres (ver .env.example).");
+  if (!secret || secret.length < 32 || secret.startsWith("cambia-esto")) {
+    throw new Error("SESSION_SECRET debe ser un texto propio de al menos 32 caracteres (ver .env.example).");
   }
   return new TextEncoder().encode(secret);
 }
