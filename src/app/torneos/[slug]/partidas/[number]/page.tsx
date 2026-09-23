@@ -7,6 +7,7 @@ import { MatchRoom, TeamLogin } from "@/components/match-room";
 import { SectionTitle } from "@/components/ui";
 import { getRoomAccess } from "@/lib/team-session";
 import { formatDateTime } from "@/lib/utils";
+import { reportGameAction } from "@/app/admin/actions";
 import { reportResultAction, teamLoginAction, teamLogoutAction } from "../../../actions";
 import { loadTournament } from "../../data";
 
@@ -58,6 +59,7 @@ export default async function MatchPage({ params }: { params: Promise<{ slug: st
             teamA={{ id: s.teamA.id, name: s.teamA.name }}
             teamB={{ id: s.teamB.id, name: s.teamB.name }}
             reportAction={reportResultAction}
+            confirmAction={reportGameAction}
             logoutAction={teamLogoutAction}
             initialGame={current?.number ?? null}
             gameLabel={gameLabel}

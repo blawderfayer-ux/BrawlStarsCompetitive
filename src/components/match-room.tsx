@@ -142,6 +142,7 @@ export function MatchRoom({
   teamA,
   teamB,
   reportAction,
+  confirmAction,
   logoutAction,
   initialGame,
   gameLabel,
@@ -151,6 +152,8 @@ export function MatchRoom({
   teamA: { id: string; name: string };
   teamB: { id: string; name: string };
   reportAction: Action;
+  /** Solo para el árbitro: confirma el ganador del game actual desde la sala. */
+  confirmAction: Action;
   logoutAction: () => Promise<void>;
   initialGame: number | null;
   gameLabel: ReactNode;
@@ -226,6 +229,15 @@ export function MatchRoom({
     if (reportState?.ok) poll();
   }, [reportState, poll]);
 
+  const [confirmState, confirmFormAction, confirmPending] = useActionState(confirmAction, null);
+  const onConfirm = useActionSubmit(confirmFormAction, { confirm: "¿Confirmar este resultado?" });
+  useEffect(() => {
+    if (confirmState?.ok) {
+      poll();
+      router.refresh();
+    }
+  }, [confirmState, poll, router]);
+
   const nameOf = (slot: "A" | "B") => (slot === "A" ? teamA.name : teamB.name);
   const myReport = me.kind === "team" ? room.reports.find((r) => r.teamId === me.teamId) : undefined;
 
@@ -279,14 +291,33 @@ export function MatchRoom({
         </div>
       ) : null}
 
-      {me.kind === "staff" && room.reports.length ? (
-        <div className="border-b-[2.5px] border-ink bg-bg-soft p-3 text-sm font-bold">
-          {room.reports.map((r) => (
-            <p key={r.teamId}>
-              {r.teamId === teamA.id ? teamA.name : teamB.name} dice: ganó <span className="text-brand">{nameOf(r.winnerSlot)}</span>
-            </p>
-          ))}
-          <p className="mt-1 text-xs text-muted">Confírmalo en el panel → Partidas.</p>
+      {me.kind === "staff" && room.currentGame && !room.finished ? (
+        <div className="border-b-[2.5px] border-ink bg-brand/10 p-3 text-sm font-bold">
+          <p className="mb-2 text-xs font-black uppercase tracking-wider text-brand">
+            Árbitro · confirmar game {room.currentGame} · {gameLabel}
+          </p>
+          {room.reports.length ? (
+            room.reports.map((r) => (
+              <p key={r.teamId}>
+                {r.teamId === teamA.id ? teamA.name : teamB.name} reporta: ganó <span className="text-brand">{nameOf(r.winnerSlot)}</span>
+              </p>
+            ))
+          ) : (
+            <p className="text-muted">Ningún equipo reportó todavía.</p>
+          )}
+          <PendingProvider pending={confirmPending}>
+            <form onSubmit={onConfirm} className="mt-2 grid grid-cols-2 gap-2">
+              <input type="hidden" name="seriesId" value={seriesId} />
+              <input type="hidden" name="game" value={room.currentGame} />
+              <SubmitButton name="slot" value="A" className="btn-ok btn-sm !normal-case" pendingText="…">
+                <span className="truncate">{teamA.name} ganó</span>
+              </SubmitButton>
+              <SubmitButton name="slot" value="B" className="btn-ok btn-sm !normal-case" pendingText="…">
+                <span className="truncate">{teamB.name} ganó</span>
+              </SubmitButton>
+            </form>
+          </PendingProvider>
+          {confirmState && !confirmState.ok ? <p className="mt-2 text-red-300">{confirmState.error}</p> : null}
         </div>
       ) : null}
 
