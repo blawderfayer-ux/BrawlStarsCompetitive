@@ -13,6 +13,14 @@ export function newAccessCode() {
   return Array.from({ length: 6 }, () => CODE_ALPHABET[randomInt(CODE_ALPHABET.length)]).join("");
 }
 
+/** Un código que no use otro equipo del mismo torneo (el código solo identifica al equipo). */
+async function uniqueAccessCode(tournamentId: string | Types.ObjectId) {
+  for (;;) {
+    const code = newAccessCode();
+    if (!(await Team.exists({ tournament: tournamentId, accessCode: code }))) return code;
+  }
+}
+
 /** Genera el código de acceso de los equipos aprobados que todavía no tienen uno. */
 export async function ensureAccessCodes(tournamentId: string) {
   await connectDB();
@@ -21,24 +29,36 @@ export async function ensureAccessCodes(tournamentId: string) {
     { _id: 1 },
   ).lean();
   for (const t of missing) {
-    await Team.updateOne({ _id: t._id, $or: [{ accessCode: "" }, { accessCode: { $exists: false } }] }, { $set: { accessCode: newAccessCode() } });
+    await Team.updateOne(
+      { _id: t._id, $or: [{ accessCode: "" }, { accessCode: { $exists: false } }] },
+      { $set: { accessCode: await uniqueAccessCode(tournamentId) } },
+    );
   }
 }
 
 export async function regenerateAccessCode(teamId: string) {
   await connectDB();
-  await Team.updateOne({ _id: teamId }, { $set: { accessCode: newAccessCode() } });
+  const team = await Team.findById(teamId, { tournament: 1 }).lean();
+  if (!team) throw new UserError("El equipo no existe.");
+  await Team.updateOne({ _id: teamId }, { $set: { accessCode: await uniqueAccessCode(team.tournament) } });
 }
 
-/** Verifica el código de un equipo del torneo. Devuelve el id del equipo si es correcto. */
-export async function checkTeamCode(tournamentId: string, teamId: string, code: string) {
+/** Normaliza lo que escribe el jugador: mayúsculas, sin espacios ni guiones. */
+export function normalizeCode(code: string) {
+  return code.toUpperCase().replace(/[^A-Z0-9]/g, "");
+}
+
+/** Busca el equipo del torneo con ese código. Devuelve su id si es correcto. */
+export async function checkTeamCode(tournamentId: string, code: string) {
   await connectDB();
-  if (!Types.ObjectId.isValid(teamId)) throw new UserError("Elige tu equipo.");
-  const normalized = code.trim().toUpperCase().replace(/\s+/g, "");
-  const team = await Team.findOne({ _id: teamId, tournament: tournamentId, registrationStatus: "approved" }, { accessCode: 1 }).lean();
-  if (!team || !team.accessCode || team.accessCode !== normalized) {
-    throw new UserError("Código incorrecto. Pídeselo a la organización.");
-  }
+  const normalized = normalizeCode(code);
+  if (normalized.length !== 6) throw new UserError("El código tiene 6 letras y números (ejemplo: K7M4QX).");
+  if (!Types.ObjectId.isValid(tournamentId)) throw new UserError("Torneo inválido.");
+  const team = await Team.findOne(
+    { tournament: tournamentId, accessCode: normalized, registrationStatus: "approved" },
+    { _id: 1 },
+  ).lean();
+  if (!team) throw new UserError("Ese código no es de ningún equipo de este torneo. Revísalo o pídeselo a la organización.");
   return String(team._id);
 }
 

@@ -7,6 +7,12 @@ import { listTournaments } from "@/lib/queries";
 import { formatDateTime } from "@/lib/utils";
 import type { TournamentView } from "@/lib/views";
 
+const HOW = [
+  ["Inscribe a tu equipo", "Toca “Inscribir mi equipo”, pon el nombre y a los 3 jugadores. Guarda el enlace privado que te sale al final."],
+  ["Recibe tu código", "Cuando aprueben tu equipo, en ese enlace aparece un código de 6 letras. También te lo manda la organización."],
+  ["Entra a “Mi equipo”", "El día del torneo abre el torneo, toca MI EQUIPO y escribe el código: ahí ves tu partida, el chat con tu rival y los botones para reportar."],
+];
+
 const PRIORITY: Record<string, number> = { live: 0, registration_open: 1, registration_closed: 2, finished: 3, cancelled: 4 };
 
 export default async function HomePage() {
@@ -24,7 +30,7 @@ export default async function HomePage() {
         <div className="absolute inset-0 -z-10 bg-gradient-to-t from-bg via-bg/60 to-bg/10" aria-hidden />
         <Container className="flex min-h-[340px] flex-col justify-end pt-16 pb-8 sm:min-h-[420px]">
           <span className="tag-skew w-fit text-sm">
-            <span>Torneos 3v3</span>
+            <span>Torneos UAGRM · Brawl Stars 3v3</span>
           </span>
           <h1 className="title-ink mt-3 text-5xl leading-[0.95] text-white sm:text-7xl">
             COMPITE.
@@ -32,7 +38,7 @@ export default async function HomePage() {
             AVANZA. <span className="text-brand">GANA.</span>
           </h1>
           <p className="mt-3 max-w-md text-base font-bold text-white/90 drop-shadow-[0_2px_0_var(--ink)]">
-            El bracket, tu rival, el modo y el mapa oficial de cada partida. Todo en vivo desde tu celular.
+            Inscribe a tu equipo, mira contra quién te toca y reporta tus resultados. Todo desde tu celular.
           </p>
         </Container>
       </section>
@@ -75,6 +81,26 @@ export default async function HomePage() {
         ) : (
           <EmptyState title="Todavía no hay torneos publicados">Vuelve pronto: aquí aparecerá el próximo torneo.</EmptyState>
         )}
+
+        <section className="mt-8">
+          <h2 className="title-ink mb-3 text-2xl uppercase">¿Cómo funciona?</h2>
+          <ol className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            {HOW.map(([title, text], i) => (
+              <li key={title} className="card flex gap-3 p-4">
+                <span className="font-display flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-ink bg-brand text-2xl text-brand-ink shadow-[0_2px_0_var(--ink)]">
+                  {i + 1}
+                </span>
+                <div>
+                  <p className="font-display text-lg leading-tight">{title}</p>
+                  <p className="mt-1 text-sm text-muted">{text}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+          <Link href="/como-jugar" className="btn btn-ghost mt-3 w-full">
+            Ver la guía completa con video
+          </Link>
+        </section>
 
         {others.length ? (
           <section className="mt-8">

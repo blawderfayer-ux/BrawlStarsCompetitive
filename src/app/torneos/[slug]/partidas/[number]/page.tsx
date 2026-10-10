@@ -3,9 +3,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { GamesList } from "@/components/series-detail";
 import { SeriesCard } from "@/components/series-card";
-import { MatchRoom, TeamLogin } from "@/components/match-room";
+import { MatchRoom } from "@/components/match-room";
+import { TeamCodeLogin, TeamLogoutButton } from "@/components/team-code-login";
 import { SectionTitle } from "@/components/ui";
-import { getRoomAccess } from "@/lib/team-session";
+import { getRoomAccess, getTeamSession } from "@/lib/team-session";
 import { formatDateTime } from "@/lib/utils";
 import { reportGameAction } from "@/app/admin/actions";
 import { reportResultAction, teamLoginAction, teamLogoutAction } from "../../../actions";
@@ -23,6 +24,8 @@ export default async function MatchPage({ params }: { params: Promise<{ slug: st
   // Sala privada: solo cuando los dos equipos están definidos.
   const hasRoom = !!(s.teamA && s.teamB) && s.status !== "cancelled";
   const access = hasRoom ? await getRoomAccess({ teamA: s.teamA?.id, teamB: s.teamB?.id }) : { kind: "none" as const };
+  const session = hasRoom && access.kind === "none" ? await getTeamSession() : null;
+  const otherTeam = session?.tournamentId === tournament.id ? session : null;
   const current = s.games.find((g) => g.status === "pending");
   const gameLabel = current ? `${current.mode?.name ?? "Modo"} · ${current.map?.name ?? "Mapa por definir"}` : "";
 
@@ -42,29 +45,48 @@ export default async function MatchPage({ params }: { params: Promise<{ slug: st
       ) : null}
 
       {hasRoom && s.teamA && s.teamB ? (
-        access.kind === "none" ? (
-          <TeamLogin
-            action={teamLoginAction}
-            slug={slug}
-            tournamentId={tournament.id}
-            teams={[
-              { id: s.teamA.id, name: s.teamA.name },
-              { id: s.teamB.id, name: s.teamB.name },
-            ]}
-          />
-        ) : (
-          <MatchRoom
-            seriesId={s.id}
-            me={access.kind === "staff" ? { kind: "staff", name: access.name } : access}
-            teamA={{ id: s.teamA.id, name: s.teamA.name }}
-            teamB={{ id: s.teamB.id, name: s.teamB.name }}
-            reportAction={reportResultAction}
-            confirmAction={reportGameAction}
-            logoutAction={teamLogoutAction}
-            initialGame={current?.number ?? null}
-            gameLabel={gameLabel}
-          />
-        )
+        <div id="sala" className="scroll-mt-32">
+          {access.kind !== "none" ? (
+            <MatchRoom
+              seriesId={s.id}
+              me={access.kind === "staff" ? { kind: "staff", name: access.name } : access}
+              teamA={{ id: s.teamA.id, name: s.teamA.name }}
+              teamB={{ id: s.teamB.id, name: s.teamB.name }}
+              reportAction={reportResultAction}
+              confirmAction={reportGameAction}
+              logoutAction={teamLogoutAction}
+              initialGame={current?.number ?? null}
+              gameLabel={gameLabel}
+            />
+          ) : otherTeam ? (
+            <div className="card space-y-3 p-4">
+              <p className="title-ink text-xl">Esta no es tu partida</p>
+              <p className="text-sm text-muted">
+                Entraste como <b className="text-text">{otherTeam.name}</b>, que no juega esta partida. La sala solo la ven los
+                dos equipos que juegan y el árbitro.
+              </p>
+              <Link href={`/torneos/${slug}/mi-equipo`} className="btn btn-primary w-full">
+                Ir a mi partida
+              </Link>
+              <div className="text-center">
+                <TeamLogoutButton action={teamLogoutAction} slug={slug} />
+              </div>
+            </div>
+          ) : (
+            <TeamCodeLogin
+              action={teamLoginAction}
+              slug={slug}
+              tournamentId={tournament.id}
+              title="Sala de la partida"
+              intro={
+                <p>
+                  ¿Juegas esta partida? Escribe el <b className="text-text">código de tu equipo</b> para chatear con tu rival
+                  y reportar el resultado.
+                </p>
+              }
+            />
+          )}
+        </div>
       ) : null}
 
       <section>

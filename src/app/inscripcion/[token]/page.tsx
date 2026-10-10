@@ -7,7 +7,7 @@ import { REGISTRATION_STATUS } from "@/lib/labels";
 import { notFound } from "next/navigation";
 import { findTeamByToken } from "@/lib/services/registrations";
 import { ensureAccessCodes } from "@/lib/services/room";
-import { updateRegistrationAction, withdrawRegistrationAction } from "../../torneos/actions";
+import { enterWithTokenAction, updateRegistrationAction, withdrawRegistrationAction } from "../../torneos/actions";
 
 export const metadata: Metadata = { title: "Mi inscripción", robots: { index: false } };
 
@@ -54,12 +54,19 @@ export default async function MyRegistrationPage({ params }: { params: Promise<{
               <p className="text-xs font-black uppercase text-muted">Código de tu equipo para la sala de partidas</p>
               <p className="font-mono text-2xl tracking-[0.3em]">{team.accessCode}</p>
               <p className="mt-1 text-xs text-muted">
-                Úsalo en la página de tu partida para chatear con el rival y reportar resultados. No lo compartas.
+                Pásalo solo a tus compañeros de equipo. Con él entran a “Mi equipo” en la página del torneo: ahí ven su
+                partida, hablan con el rival y reportan el resultado.
               </p>
             </div>
           ) : null}
-          <Link href={`/torneos/${tournament.slug}/equipos/${team.slug}`} className="btn btn-primary mt-3 w-full">
-            Ver mi equipo en el torneo
+          <form action={enterWithTokenAction} className="mt-3">
+            <input type="hidden" name="token" value={token} />
+            <button type="submit" className="btn btn-primary w-full">
+              Entrar como mi equipo
+            </button>
+          </form>
+          <Link href={`/torneos/${tournament.slug}/equipos/${team.slug}`} className="btn btn-ghost mt-2 w-full">
+            Ver la ficha del equipo
           </Link>
         </div>
       ) : null}

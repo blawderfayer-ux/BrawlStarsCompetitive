@@ -7,11 +7,13 @@ import { requireStaffPage } from "@/lib/auth";
 import { COMPETITION_STATUS, MEMBER_ROLE_LABEL, REGISTRATION_STATUS } from "@/lib/labels";
 import { getTeamsForAdmin } from "@/lib/queries";
 import { ensureAccessCodes } from "@/lib/services/room";
+import { listOpenByes } from "@/lib/services/tournaments";
 import { ENTRY_FEE_BS, feeStatus } from "@/lib/entry-fee";
 import { timeAgo } from "@/lib/utils";
 import type { TeamAdminView } from "@/lib/views";
 import {
   adminUpdateTeamAction,
+  addLateTeamAction,
   importTeamsAction,
   regenerateCodeAction,
   setTeamCheckAction,
@@ -92,16 +94,84 @@ export default async function RegistrationsPage({ params }: { params: Promise<{ 
   await ensureAccessCodes(tournament.id);
   const teams = await getTeamsForAdmin(tournament.id);
   const approvedTeams = teams.filter((t) => t.registrationStatus === "approved");
-  const roomUrl = `{origin}/torneos/${slug}/partidas`;
+  const myTeamUrl = `{origin}/torneos/${slug}/mi-equipo`;
   const codeMessage = (t: { name: string; accessCode: string }) =>
-    `Hola ${t.name}! Este es el código de su equipo para la sala de partidas del ${tournament.name}: ${t.accessCode}\n` +
-    `Entren a su partida en ${roomUrl}, toquen su equipo y pongan el código. Ahí chatean con el rival, pasan el link del equipo y reportan el resultado. No lo compartan.`;
+    `Hola ${t.name}! El código de su equipo para el ${tournament.name} es: ${t.accessCode}\n` +
+    `El día del torneo entren a ${myTeamUrl} y escriban el código: ahí ven su partida, chatean con el rival y reportan si ganaron o perdieron. Los 3 pueden usar el mismo código. No lo pasen a otros equipos.`;
   const allCodes = approvedTeams.map((t) => `${t.name}: ${t.accessCode}`).join("\n");
   const owing = approvedTeams.filter((t) => feeStatus(t.members) === "pays" && !t.paid);
   const unknownFee = approvedTeams.filter((t) => feeStatus(t.members) === "unknown");
   const unchecked = approvedTeams.filter((t) => !t.idsChecked);
   const locked = !!tournament.bracketGeneratedAt;
   const approvedCount = teams.filter((t) => t.registrationStatus === "approved").length;
+
+  const openByes = locked && tournament.status === "live" ? await listOpenByes(tournament.id) : [];
+  const waiting = teams.filter((t) => t.registrationStatus === "pending" || t.registrationStatus === "needs_changes");
+  const lateCard =
+    locked && tournament.status === "live" ? (
+      <Collapsible
+        className="card p-4"
+        defaultOpen={false}
+        summary={<summary className="cursor-pointer font-extrabold">Agregar un equipo con el torneo empezado</summary>}
+      >
+        {openByes.length ? (
+          <>
+            <p className="mt-2 text-sm text-muted">
+              El equipo nuevo entra en el lugar de un <b className="text-text">BYE</b> de la primera ronda: juega contra
+              el equipo que había pasado directo, y el ganador sigue en el bracket. Solo se puede usar un BYE si ese
+              equipo todavía no jugó su siguiente partida.
+            </p>
+            <ActionForm action={addLateTeamAction} className="mt-3 space-y-3" resetOnSuccess>
+              <input type="hidden" name="id" value={tournament.id} />
+              <div>
+                <label className="label" htmlFor="late-bye">
+                  Juega contra (BYE)
+                </label>
+                <select id="late-bye" name="byeKey" className="input" required>
+                  {openByes.map((b) => (
+                    <option key={b.key} value={b.key}>
+                      {b.teamName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {waiting.length ? (
+                <div>
+                  <label className="label" htmlFor="late-team">
+                    Equipo
+                  </label>
+                  <select id="late-team" name="teamId" className="input" defaultValue="">
+                    <option value="">Equipo nuevo (escríbelo abajo)</option>
+                    {waiting.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.name} (inscripción pendiente)
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ) : null}
+              <label className="label" htmlFor="late-list">
+                Equipo nuevo: nombre y debajo sus jugadores con “-”
+              </label>
+              <textarea
+                id="late-list"
+                name="list"
+                className="input min-h-[140px] font-mono text-sm"
+                placeholder={"Nombre del equipo\n-Jugador 1\n-Jugador 2\n-Jugador 3"}
+              />
+              <SubmitButton className="btn-secondary w-full" pendingText="Agregando…">
+                Agregar al bracket
+              </SubmitButton>
+            </ActionForm>
+          </>
+        ) : (
+          <p className="mt-2 text-sm text-muted">
+            No queda ningún BYE libre: todos los cruces de la primera ronda ya están completos o esos equipos ya jugaron.
+            Para sumar un equipo habría que reiniciar el bracket desde el Resumen (se pierden los resultados).
+          </p>
+        )}
+      </Collapsible>
+    ) : null;
 
   const importCard = locked ? null : (
     <Collapsible
@@ -134,6 +204,7 @@ export default async function RegistrationsPage({ params }: { params: Promise<{ 
   return (
     <div className="space-y-8">
       {importCard}
+      {lateCard}
       {approvedTeams.length ? (
         <section className="card p-4">
           <p className="title-ink text-lg">Control de entrada ({ENTRY_FEE_BS} Bs si menos de 2 titulares son FICCT)</p>
@@ -158,8 +229,8 @@ export default async function RegistrationsPage({ params }: { params: Promise<{ 
           summary={<summary className="cursor-pointer font-extrabold">Códigos de acceso a la sala de partidas ({approvedTeams.length})</summary>}
         >
           <p className="mt-2 text-sm text-muted">
-            Cada capitán entra a la página de su partida con este código para chatear con el rival y reportar resultados.
-            Envíaselo por privado (botón “Mensaje”).
+            Cada equipo entra a “Mi equipo” con este código: ahí ve su partida, chatea con el rival y reporta resultados.
+            Envíaselo por privado (botón “Mensaje”, ya trae el link y las instrucciones).
           </p>
           <ul className="mt-3 divide-y-2 divide-ink/50">
             {approvedTeams.map((t) => (

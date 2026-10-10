@@ -1,6 +1,9 @@
 import { Crown } from "lucide-react";
 import Link from "next/link";
-import { MyTeamCard } from "@/components/my-team";
+import { MyTeamPanel } from "@/components/my-team";
+import { TeamCodeLogin } from "@/components/team-code-login";
+import { getTeamSession } from "@/lib/team-session";
+import { teamLoginAction } from "../actions";
 import { SeriesCard } from "@/components/series-card";
 import { LiveSeriesHero } from "@/components/series-detail";
 import { EmptyState, SectionTitle, TeamLogo } from "@/components/ui";
@@ -18,6 +21,9 @@ export default async function TournamentHome({ params }: { params: Promise<{ slu
     .sort((a, b) => (a.scheduledAt ?? "9").localeCompare(b.scheduledAt ?? "9") || a.number - b.number)
     .slice(0, 4);
   const active = teams.filter((t) => t.competitionStatus === "active").length;
+  const session = await getTeamSession();
+  const myTeam = session?.tournamentId === tournament.id ? teams.find((t) => t.id === session.teamId) : undefined;
+  const playing = tournament.status === "live" || tournament.status === "registration_closed";
 
   const stats = tournament.bracketGeneratedAt
     ? [
@@ -55,7 +61,18 @@ export default async function TournamentHome({ params }: { params: Promise<{ slu
           </section>
         ) : null}
 
-        {tournament.bracketGeneratedAt ? <MyTeamCard slug={slug} teams={teams} series={series} /> : null}
+        {myTeam ? (
+          <MyTeamPanel slug={slug} tournament={tournament} team={myTeam} series={series} compact />
+        ) : playing ? (
+          <TeamCodeLogin
+            action={teamLoginAction}
+            slug={slug}
+            tournamentId={tournament.id}
+            title="¿Juegas en este torneo?"
+            intro={<p>Escribe el código de tu equipo y te llevamos directo a tu partida.</p>}
+            goTo={`/torneos/${slug}/mi-equipo`}
+          />
+        ) : null}
 
         {tournament.bracketGeneratedAt && !champion ? (
           <section>

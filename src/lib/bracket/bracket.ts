@@ -2,13 +2,14 @@ import {
   SeriesError,
   applyGameResult,
   applyWalkover,
+  buildGames,
   canCorrect,
   otherSlot,
   resetSeriesState,
   teamInSlot,
   undoLastGame,
 } from "./series";
-import type { SeriesState, Slot } from "./types";
+import type { GamePlan, SeriesState, Slot } from "./types";
 
 /**
  * Operaciones sobre el bracket completo. Reciben todas las series del torneo y devuelven
@@ -131,4 +132,53 @@ export function resetSeries(all: SeriesState[], key: string): BracketChange {
   if (current.winnerSlot) retract(byKey, current, change);
   change.changed.unshift(resetSeriesState(current));
   return change;
+}
+
+/** BYE de la ronda 1 donde todavía puede entrar un equipo (el que pasó directo aún no jugó). */
+export function openByes(all: SeriesState[]): SeriesState[] {
+  const byKey = index(all);
+  return all.filter((s) => {
+    if (!s.isBye || s.round !== 1) return false;
+    const next = s.nextKey ? byKey.get(s.nextKey) : null;
+    return !next || canCorrect(next);
+  });
+}
+
+/**
+ * Inscripción tardía: convierte un BYE de la ronda 1 en una serie normal contra `team`.
+ * El equipo que había pasado directo vuelve a la ronda 1 y sale de la siguiente serie.
+ */
+export function fillBye(all: SeriesState[], key: string, team: string, plan: GamePlan[] = []): SeriesState[] {
+  const byKey = index(all);
+  const bye = getSeries(byKey, key);
+  if (!bye.isBye || bye.round !== 1 || !bye.winnerSlot) throw new SeriesError("Esa serie no es un BYE libre.");
+  if (all.some((s) => s.teamA === team || s.teamB === team)) throw new SeriesError("Ese equipo ya está en el bracket.");
+
+  const changed: SeriesState[] = [];
+  if (bye.nextKey && bye.nextSlot) {
+    const next = getSeries(byKey, bye.nextKey);
+    if (!canCorrect(next)) {
+      throw new SeriesError("El equipo de ese BYE ya jugó su siguiente partida. Elige otro BYE.");
+    }
+    const updated = { ...next };
+    if (bye.nextSlot === "A") updated.teamA = null;
+    else updated.teamB = null;
+    if (updated.status !== "cancelled") updated.status = "waiting";
+    changed.push(updated);
+  }
+
+  const emptySlot = otherSlot(bye.winnerSlot);
+  changed.unshift({
+    ...bye,
+    teamA: emptySlot === "A" ? team : bye.teamA,
+    teamB: emptySlot === "B" ? team : bye.teamB,
+    isBye: false,
+    winnerSlot: null,
+    scoreA: 0,
+    scoreB: 0,
+    walkover: false,
+    status: "pending",
+    games: buildGames(bye.bestOf, plan),
+  });
+  return changed;
 }

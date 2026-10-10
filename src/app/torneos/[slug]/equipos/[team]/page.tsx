@@ -1,7 +1,6 @@
 import { Crown, Repeat, UserRound } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { SetMyTeamButton } from "@/components/my-team";
 import { SeriesCard } from "@/components/series-card";
 import { GamesList } from "@/components/series-detail";
 import { SectionTitle, StatusBadge, TeamLogo } from "@/components/ui";
@@ -35,9 +34,6 @@ export default async function TeamPage({ params }: { params: Promise<{ slug: str
             {team.seed ? `Seed ${team.seed} · ` : ""}
             {team.wins} victorias · {team.losses} derrotas
           </p>
-          <div className="mt-3">
-            <SetMyTeamButton slug={slug} teamId={team.id} />
-          </div>
         </div>
       </section>
 
