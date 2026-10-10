@@ -5,7 +5,7 @@ import { cookies } from "next/headers";
 import { cache } from "react";
 import { getCurrentUser } from "./auth";
 import { connectDB } from "./db";
-import { Series, Team } from "@/models";
+import { Series, Team, Tournament } from "@/models";
 
 /**
  * Los jugadores no tienen cuenta: el capitán entra con el código de 6 caracteres de su equipo
@@ -41,6 +41,7 @@ export async function destroyTeamSession() {
 export interface TeamSession {
   teamId: string;
   tournamentId: string;
+  tournamentSlug: string;
   name: string;
 }
 
@@ -53,7 +54,9 @@ export const getTeamSession = cache(async (): Promise<TeamSession | null> => {
     await connectDB();
     const team = await Team.findById(payload.sub, { name: 1, tournament: 1, registrationStatus: 1 }).lean();
     if (!team || team.registrationStatus !== "approved") return null;
-    return { teamId: String(team._id), tournamentId: String(team.tournament), name: team.name };
+    const tournament = await Tournament.findById(team.tournament, { slug: 1 }).lean();
+    if (!tournament) return null;
+    return { teamId: String(team._id), tournamentId: String(team.tournament), tournamentSlug: tournament.slug, name: team.name };
   } catch {
     return null;
   }

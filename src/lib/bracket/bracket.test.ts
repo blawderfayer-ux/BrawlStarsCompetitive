@@ -8,6 +8,8 @@ import {
   seedOrder,
   suggestRoundPlan,
   randomSeriesPlan,
+  fillBye,
+  openByes,
   repeatedModes,
   undoGame,
   walkover,
@@ -315,5 +317,55 @@ describe("randomSeriesPlan", () => {
       { modeId: null, mapId: null },
       { modeId: null, mapId: null },
     ]);
+  });
+});
+
+describe("fillBye (equipo tardío)", () => {
+  it("convierte un BYE en partida y saca al equipo de la siguiente ronda", () => {
+    let all = generateSingleElimination(teams(5), { defaultBestOf: 3 }).series;
+    const byes = openByes(all);
+    expect(byes).toHaveLength(3);
+    const bye = byes[0];
+    const byeTeam = bye.winnerSlot === "A" ? bye.teamA : bye.teamB;
+    const changed = fillBye(all, bye.key, "T6", [{ modeId: "gem", mapId: "g1" }]);
+    all = apply(all, changed);
+
+    const filled = all.find((s) => s.key === bye.key)!;
+    expect(filled.isBye).toBe(false);
+    expect(filled.winnerSlot).toBeNull();
+    expect(filled.status).toBe("pending");
+    expect([filled.teamA, filled.teamB].sort()).toEqual([byeTeam, "T6"].sort());
+    expect(filled.games).toHaveLength(3);
+    expect(filled.games[0]).toMatchObject({ modeId: "gem", mapId: "g1", status: "pending" });
+
+    const next = all.find((s) => s.key === bye.nextKey)!;
+    expect(bye.nextSlot === "A" ? next.teamA : next.teamB).toBeNull();
+    expect(next.status).toBe("waiting");
+    expect(openByes(all)).toHaveLength(2);
+
+    // La partida nueva funciona como cualquier otra: el ganador avanza.
+    const winnerSlot = filled.teamA === "T6" ? "A" : "B";
+    all = apply(all, reportGame(all, bye.key, 1, winnerSlot).changed);
+    all = apply(all, reportGame(all, bye.key, 2, winnerSlot).changed);
+    const after = all.find((s) => s.key === bye.nextKey)!;
+    expect(bye.nextSlot === "A" ? after.teamA : after.teamB).toBe("T6");
+  });
+
+  it("no deja usar un BYE cuyo equipo ya jugó la siguiente partida", () => {
+    let all = generateSingleElimination(teams(3), { defaultBestOf: 1 }).series;
+    const bye = all.find((s) => s.isBye)!;
+    const real = all.find((s) => s.round === 1 && !s.isBye)!;
+    all = apply(all, reportGame(all, real.key, 1, "A").changed);
+    all = apply(all, reportGame(all, bye.nextKey!, 1, "A").changed);
+    expect(openByes(all)).toHaveLength(0);
+    expect(() => fillBye(all, bye.key, "T9")).toThrow();
+  });
+
+  it("rechaza equipos que ya están en el bracket y series que no son BYE", () => {
+    const all = generateSingleElimination(teams(3), { defaultBestOf: 1 }).series;
+    const bye = all.find((s) => s.isBye)!;
+    const real = all.find((s) => s.round === 1 && !s.isBye)!;
+    expect(() => fillBye(all, bye.key, "T2")).toThrow();
+    expect(() => fillBye(all, real.key, "T9")).toThrow();
   });
 });

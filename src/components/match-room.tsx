@@ -1,12 +1,11 @@
 "use client";
 
-import { Camera, LogOut, Send, ShieldCheck } from "lucide-react";
+import { Camera, LogOut, Send } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { startTransition, useActionState, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import type { ActionResult } from "@/lib/action-result";
 import { cn, formatTime } from "@/lib/utils";
 import { PendingProvider, SubmitButton, useActionSubmit } from "./action-form";
-import { useMyTeam } from "./use-my-team";
 
 interface Message {
   id: string;
@@ -54,87 +53,6 @@ async function shrinkPhoto(file: File): Promise<File> {
   canvas.getContext("2d")!.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
   const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, "image/jpeg", 0.8));
   return blob ? new File([blob], "foto.jpg", { type: "image/jpeg" }) : file;
-}
-
-/* ─────────────── Entrar con el código del equipo ─────────────── */
-
-export function TeamLogin({
-  action,
-  slug,
-  tournamentId,
-  teams,
-}: {
-  action: Action;
-  slug: string;
-  tournamentId: string;
-  teams: { id: string; name: string }[];
-}) {
-  const router = useRouter();
-  const [, setMyTeam] = useMyTeam(slug);
-  const [state, formAction, pending] = useActionState(action, null);
-  const onSubmit = useActionSubmit(formAction);
-
-  useEffect(() => {
-    if (state?.ok) {
-      if (typeof state.data === "string") setMyTeam(state.data);
-      router.refresh();
-    }
-  }, [state, router, setMyTeam]);
-
-  return (
-    <PendingProvider pending={pending}>
-      <form onSubmit={onSubmit} className="card space-y-3 p-4">
-        <div className="flex items-center gap-2">
-          <ShieldCheck className="text-brand" />
-          <p className="title-ink text-xl">Sala de la partida</p>
-        </div>
-        <p className="text-sm text-muted">
-          ¿Juegas esta partida? Toca tu equipo y escribe su <b className="text-text">código</b> para chatear con tu rival,
-          pasar el link del equipo y reportar el resultado.
-        </p>
-        <input type="hidden" name="tournamentId" value={tournamentId} />
-        <div className="grid grid-cols-2 gap-2">
-          {teams.map((t, i) => (
-            <label
-              key={t.id}
-              className={cn(
-                "font-display flex min-h-[48px] cursor-pointer items-center justify-center rounded-xl border-2 border-ink px-2 text-center text-sm has-[:checked]:ring-4 has-[:checked]:ring-brand",
-                i === 0 ? "bg-blue/40" : "bg-red/40",
-              )}
-            >
-              <input type="radio" name="teamId" value={t.id} className="sr-only" required />
-              {t.name}
-            </label>
-          ))}
-        </div>
-        <div>
-          <label className="label" htmlFor="team-code">
-            Código de tu equipo (6 letras)
-          </label>
-          <input
-            id="team-code"
-            name="code"
-            required
-            maxLength={8}
-            autoComplete="off"
-            autoCapitalize="characters"
-            placeholder="ej: K7M4QX"
-            className="input text-center font-mono text-xl uppercase tracking-[0.3em] placeholder:text-base placeholder:tracking-normal placeholder:normal-case placeholder:text-muted/50"
-          />
-          <p className="mt-1 text-xs text-muted">
-            Lo ves en el enlace privado que recibiste al inscribirte, o te lo manda la organización por WhatsApp.
-          </p>
-        </div>
-        {state && !state.ok ? <p className="rounded-lg bg-red/20 px-3 py-2 text-sm font-bold text-red-200">{state.error}</p> : null}
-        <SubmitButton className="btn-primary w-full" pendingText="Entrando…">
-          Entrar a la sala
-        </SubmitButton>
-        <a href="/como-jugar" className="block text-center text-xs font-bold text-muted underline">
-          ¿Primera vez? Mira el video de cómo jugar
-        </a>
-      </form>
-    </PendingProvider>
-  );
 }
 
 /* ─────────────── Sala: chat + reporte de resultado ─────────────── */
@@ -270,9 +188,13 @@ export function MatchRoom({
       {/* Reporte de resultado del game actual */}
       {me.kind === "team" && room.currentGame && !room.finished ? (
         <div className="border-b-[2.5px] border-ink bg-bg-soft p-3">
-          <p className="mb-2 text-xs font-black uppercase tracking-wider text-muted">
-            Reportar game {room.currentGame} · {gameLabel}
+          <p className="text-xs font-black uppercase tracking-wider text-muted">Ahora: game {room.currentGame}</p>
+          <p className="font-display text-lg leading-tight">{gameLabel}</p>
+          <p className="mt-1 text-xs text-muted">
+            Uno de los dos crea la sala en Brawl Stars (<b className="text-text">Jugar → Amistoso</b>) con este modo y mapa y
+            pasa el código o link por el chat de abajo.
           </p>
+          <p className="mt-3 text-sm font-extrabold">¿Terminó el game? ¿Cómo les fue?</p>
           {myReport ? (
             <p className="rounded-xl border-2 border-ink bg-card px-3 py-2 text-sm font-bold">
               Reportaste: ganó <span className="text-brand">{nameOf(myReport.winnerSlot)}</span>. Esperando al árbitro.
@@ -291,6 +213,12 @@ export function MatchRoom({
             </form>
           </PendingProvider>
           {reportState && !reportState.ok ? <p className="mt-2 text-sm font-bold text-red-300">{reportState.error}</p> : null}
+        </div>
+      ) : null}
+
+      {me.kind === "team" && room.finished ? (
+        <div className="border-b-[2.5px] border-ink bg-bg-soft p-3 text-sm font-bold">
+          La partida terminó. Mira arriba el resultado y, si ganaron, vuelvan a “Mi equipo” para ver su siguiente partida.
         </div>
       ) : null}
 
@@ -327,7 +255,7 @@ export function MatchRoom({
       <div ref={listRef} className="h-[360px] space-y-2 overflow-y-auto p-3">
         {messages.length === 0 ? (
           <p className="pt-10 text-center text-sm text-muted">
-            Todavía no hay mensajes. Pasa aquí el link de invitación de tu equipo o el código de sala.
+            Todavía no hay mensajes. Saluda a tu rival y pasen aquí el código o link de la sala amistosa.
           </p>
         ) : null}
         {messages.map((m) => {

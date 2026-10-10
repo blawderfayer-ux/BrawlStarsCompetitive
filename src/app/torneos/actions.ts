@@ -6,7 +6,9 @@ import { parseRegistrationForm } from "@/lib/registration-form";
 import { checkTeamCode, reportResult } from "@/lib/services/room";
 import { createTeamSession, destroyTeamSession, loadSeriesWithAccess } from "@/lib/team-session";
 import { UserError } from "@/lib/services/tx";
+import { redirect } from "next/navigation";
 import {
+  findTeamByToken,
   submitRegistration,
   updateRegistrationByToken,
   withdrawRegistration,
@@ -44,13 +46,25 @@ export async function withdrawRegistrationAction(_prev: ActionResult | null, for
   return runAction(() => withdrawRegistration(str(form, "token")), "Inscripción retirada.");
 }
 
-/** El capitán entra a la sala de su partida con el código de su equipo. */
+/** El jugador entra con el código de su equipo: con eso ve su partida y usa la sala. */
 export async function teamLoginAction(_prev: ActionResult | null, form: FormData): Promise<ActionResult> {
-  return runAction(async () => {
-    const teamId = await checkTeamCode(str(form, "tournamentId"), str(form, "teamId"), str(form, "code"));
+  const result = await runAction(async () => {
+    const teamId = await checkTeamCode(str(form, "tournamentId"), str(form, "code"));
     await createTeamSession(teamId);
     return teamId;
-  }, "¡Listo! Ya estás en la sala de tu partida.");
+  }, "¡Listo! Entraste con tu equipo.");
+  // Solo rutas internas del sitio.
+  const goTo = str(form, "goTo");
+  if (result.ok && /^\/torneos\/[\w-]+\/mi-equipo$/.test(goTo)) redirect(goTo);
+  return result;
+}
+
+/** Desde el enlace privado de inscripción: entra como el equipo sin escribir el código. */
+export async function enterWithTokenAction(form: FormData) {
+  const found = await findTeamByToken(str(form, "token"));
+  if (!found || found.team.registrationStatus !== "approved") redirect("/");
+  await createTeamSession(String(found.team._id));
+  redirect(`/torneos/${found.tournament.slug}/mi-equipo`);
 }
 
 export async function teamLogoutAction() {

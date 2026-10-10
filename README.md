@@ -1,6 +1,6 @@
-# BrawlStarsCompetitive
+# Torneos UAGRM
 
-Plataforma web **mobile-first** para organizar torneos 3v3 de Brawl Stars. La página es la fuente oficial del torneo:
+Plataforma web **mobile-first** para organizar torneos 3v3 de Brawl Stars en la UAGRM. La página es la fuente oficial del torneo:
 equipos, bracket, rival, modo y mapa de cada game, resultados y eliminaciones. Brawl Stars sigue siendo donde se
 juega; la plataforma organiza la competición.
 
@@ -12,13 +12,17 @@ juega; la plataforma organiza la competición.
 - Inscripción del equipo: nombre, logo, color, capitán + 2 jugadores con su tag, suplente opcional y contacto.
 - Enlace privado para ver el estado de la inscripción (PENDIENTE / APROBADO / REQUIERE CORRECCIÓN) y corregirla.
 - Página del torneo: Inicio, Equipos, Bracket, Partidas, Resultados y Reglas.
-- “Partida en curso” con marcador y mapa actual, “Mi equipo” con la próxima partida, y avisos en vivo
-  (“¡Team Alpha avanza a semifinales!”).
+- **Mi equipo**: el jugador escribe el código de 6 letras de su equipo (o toca “Entrar como mi equipo” en su
+  enlace privado) y ve su partida, su rival, el modo y mapa, y el botón para abrir la sala de la partida
+  (chat con el rival y botones GANAMOS / PERDIMOS). Guía y video en `/como-jugar`.
+- “Partida en curso” con marcador y mapa actual, y avisos en vivo (“¡Team Alpha avanza a semifinales!”).
 - Bracket por ronda (cómodo en el celular) o cuadro completo con líneas.
 
 **Organización (admin y árbitros)**
 - Crear torneos (múltiples), configurar fecha, máximo de equipos, BO1/BO3/BO5/BO7 (también por ronda) y reglamento.
 - Revisar inscripciones: aprobar, rechazar, pedir corrección, editar, asignar seeds.
+- Inscripción tardía: con el torneo empezado, un equipo nuevo entra en el lugar de un BYE de la primera ronda
+  (si el equipo de ese BYE todavía no jugó su siguiente partida).
 - **Generar el bracket automáticamente** (eliminación simple, con BYE si los equipos no son potencia de 2).
 - Plan oficial de **modo y mapa por game** para cada ronda (sin repetir modo en una serie), editable por ronda o por
   partida. Pool de mapas por torneo.

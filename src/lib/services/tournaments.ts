@@ -6,6 +6,9 @@ import {
   nextPowerOfTwo,
   roundName,
   randomSeriesPlan,
+  fillBye,
+  openByes,
+  SeriesError,
   type GamePlan,
 } from "../bracket";
 import { connectDB } from "../db";
@@ -20,7 +23,9 @@ import {
   TournamentEvent,
   type TournamentStatus,
 } from "@/models";
-import { declareWalkover, stateToFields } from "./matches";
+import { declareWalkover, stateToFields, toState } from "./matches";
+import { importedTeamFields } from "./registrations";
+import { parseTeamList } from "./team-list";
 import { UserError, withTransaction } from "./tx";
 
 export interface TournamentInput {
@@ -407,5 +412,99 @@ export async function disqualifyTeam(teamId: string, actorId: string) {
     type: "team_eliminated",
     message: `${team.name} fue descalificado.`,
     actor: actorId,
+  });
+}
+
+/** BYE donde todavía puede entrar un equipo tardío (para el panel). */
+export async function listOpenByes(tournamentId: string) {
+  await connectDB();
+  const all = await Series.find({ tournament: tournamentId }).sort({ round: 1, position: 1 }).lean();
+  const teams = await Team.find({ tournament: tournamentId }, { name: 1 }).lean();
+  const name = new Map(teams.map((t) => [String(t._id), t.name]));
+  return openByes(all.map(toState)).map((s) => {
+    const team = s.winnerSlot === "A" ? s.teamA : s.teamB;
+    return { key: s.key, teamName: team ? name.get(team) ?? "Equipo" : "Equipo" };
+  });
+}
+
+/**
+ * Inscripción tardía: con el torneo ya empezado, un equipo entra en el lugar de un BYE
+ * de la ronda 1 y juega contra el equipo que había pasado directo.
+ * El equipo puede ser una inscripción pendiente (`teamId`) o uno nuevo escrito como en la importación.
+ */
+export async function addLateTeam(
+  tournamentId: string,
+  input: { teamId: string | null; text: string; byeKey: string },
+  actorId: string,
+) {
+  return withTransaction(async (session) => {
+    const opts = { session: session ?? undefined };
+    const t = await Tournament.findById(tournamentId).session(session);
+    if (!t) throw new UserError("El torneo no existe.");
+    if (!t.bracketGeneratedAt || t.status !== "live") {
+      throw new UserError("Esto es para torneos en curso. Antes de generar el bracket, inscribe o importa el equipo normalmente.");
+    }
+
+    const approvedCount = await Team.countDocuments({ tournament: t._id, registrationStatus: "approved" }).session(session);
+    let team;
+    if (input.teamId) {
+      team = await Team.findOne({
+        _id: Types.ObjectId.isValid(input.teamId) ? input.teamId : null,
+        tournament: t._id,
+        registrationStatus: { $in: ["pending", "needs_changes"] },
+      }).session(session);
+      if (!team) throw new UserError("Esa inscripción ya no está pendiente.");
+      team.registrationStatus = "approved";
+    } else {
+      const parsed = parseTeamList(input.text);
+      if (parsed.length !== 1) throw new UserError("Escribe un solo equipo: el nombre y debajo sus jugadores con “-”.");
+      const exists = await Team.exists({
+        tournament: t._id,
+        slug: slugify(parsed[0].name),
+        registrationStatus: { $in: ["pending", "needs_changes", "approved"] },
+      }).session(session);
+      if (exists) throw new UserError(`Ya existe un equipo llamado ${parsed[0].name}.`);
+      team = new Team(await importedTeamFields(t._id, t.teamSize ?? 3, parsed[0], true, approvedCount));
+    }
+    team.competitionStatus = "active";
+    team.seed = approvedCount + 1;
+    await team.save(opts);
+
+    const docs = await Series.find({ tournament: t._id }).session(session).lean();
+    const byeDoc = docs.find((d) => d.key === input.byeKey);
+    if (!byeDoc) throw new UserError("Elige un BYE.");
+    const pool = await poolFor(t._id);
+    let changed;
+    try {
+      changed = fillBye(docs.map(toState), input.byeKey, String(team._id), randomSeriesPlan(pool, byeDoc.bestOf));
+    } catch (err) {
+      if (err instanceof SeriesError) throw new UserError(err.message);
+      throw err;
+    }
+    const number = Math.max(0, ...docs.map((d) => d.number ?? 0)) + 1;
+    for (const c of changed) {
+      const extra = c.key === input.byeKey ? { number } : {};
+      await Series.updateOne({ tournament: t._id, key: c.key }, { $set: { ...stateToFields(c), ...extra } }, opts);
+    }
+    if (approvedCount + 1 > t.maxTeams) {
+      t.maxTeams = approvedCount + 1;
+      await t.save(opts);
+    }
+
+    const filled = changed[0];
+    const rivalId = filled.teamA === String(team._id) ? filled.teamB : filled.teamA;
+    const rival = rivalId ? await Team.findById(rivalId, { name: 1 }).session(session).lean() : null;
+    await TournamentEvent.create(
+      [
+        {
+          tournament: t._id,
+          type: "registration_reviewed",
+          message: `${team.name} se suma al torneo: juega contra ${rival?.name ?? "su rival"} en la partida #${number}.`,
+          actor: actorId,
+        },
+      ],
+      opts,
+    );
+    return { teamName: team.name, number };
   });
 }

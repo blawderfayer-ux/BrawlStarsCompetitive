@@ -283,22 +283,11 @@ export async function importTeams(tournamentId: string, text: string, approve: b
       result.skipped.push(entry.name);
       continue;
     }
-    const members = entry.players.map((p, i) => ({
-      name: p.name,
-      tag: p.tag,
-      role: (i === 0 ? "captain" : i < teamSize ? "player" : "sub") as "captain" | "player" | "sub",
-    }));
     if (entry.players.length < teamSize) result.incomplete.push(entry.name);
     const canApprove = approve && approved < t.maxTeams;
-    await Team.create({
-      tournament: t._id,
-      name: entry.name,
-      slug: await uniqueSlug(t._id, entry.name),
-      color: TEAM_COLORS[(approved + result.created.length) % TEAM_COLORS.length],
-      members,
-      registrationStatus: canApprove ? "approved" : "pending",
-      editTokenHash: hashToken(randomBytes(24).toString("base64url")),
-    });
+    await Team.create(
+      await importedTeamFields(t._id, teamSize, entry, canApprove, approved + result.created.length),
+    );
     if (canApprove) approved++;
     result.created.push(entry.name);
   }
@@ -311,6 +300,29 @@ export async function importTeams(tournamentId: string, text: string, approve: b
     actor: actorId,
   });
   return result;
+}
+
+/** Datos de un equipo cargado desde una lista (importación o inscripción tardía). */
+export async function importedTeamFields(
+  tournamentId: Types.ObjectId,
+  teamSize: number,
+  entry: { name: string; players: { name: string; tag: string }[] },
+  approved: boolean,
+  colorIndex: number,
+) {
+  return {
+    tournament: tournamentId,
+    name: entry.name,
+    slug: await uniqueSlug(tournamentId, entry.name),
+    color: TEAM_COLORS[colorIndex % TEAM_COLORS.length],
+    members: entry.players.map((p, i) => ({
+      name: p.name,
+      tag: p.tag,
+      role: (i === 0 ? "captain" : i < teamSize ? "player" : "sub") as "captain" | "player" | "sub",
+    })),
+    registrationStatus: (approved ? "approved" : "pending") as RegistrationStatus,
+    editTokenHash: hashToken(randomBytes(24).toString("base64url")),
+  };
 }
 
 const TEAM_COLORS = ["#3b82f6", "#ef4444", "#22c55e", "#eab308", "#a855f7", "#f97316", "#06b6d4", "#ec4899"];

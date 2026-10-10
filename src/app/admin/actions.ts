@@ -43,6 +43,7 @@ import {
   setTournamentStatus,
   updateRoundPlan,
   rerollMaps,
+  addLateTeam,
   updateTournament,
   type SeedingMethod,
   type TournamentInput,
@@ -203,6 +204,18 @@ export async function rerollMapsAction(_prev: Result, form: FormData): Promise<A
 }
 
 /* ─────────────── Inscripciones y equipos ─────────────── */
+
+export async function addLateTeamAction(_prev: Result, form: FormData): Promise<ActionResult> {
+  return runAction(async () => {
+    const user = await requireStaff(["admin"]);
+    const r = await addLateTeam(
+      str(form, "id"),
+      { teamId: str(form, "teamId") || null, text: str(form, "list"), byeKey: str(form, "byeKey") },
+      user.id,
+    );
+    return r;
+  }, "Equipo agregado al bracket. Ya tiene su partida y su código está en la lista de códigos.");
+}
 
 export async function reviewRegistrationAction(_prev: Result, form: FormData): Promise<ActionResult> {
   return runAction(async () => {

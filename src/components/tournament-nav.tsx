@@ -1,12 +1,13 @@
 "use client";
 
-import { BookOpen, House, ScrollText, Shield, Swords, Trophy, type LucideIcon } from "lucide-react";
+import { BookOpen, House, KeyRound, ScrollText, Shield, Swords, Trophy, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 const TABS: { href: string; label: string; icon: LucideIcon }[] = [
   { href: "", label: "Inicio", icon: House },
+  { href: "/mi-equipo", label: "Mi equipo", icon: KeyRound },
   { href: "/equipos", label: "Equipos", icon: Shield },
   { href: "/bracket", label: "Bracket", icon: Trophy },
   { href: "/partidas", label: "Partidas", icon: Swords },
