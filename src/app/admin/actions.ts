@@ -119,6 +119,9 @@ function tournamentInput(form: FormData): TournamentInput {
     roundDurationMinutes: Math.max(5, num(form, "roundDurationMinutes", 30)),
     rules: str(form, "rules"),
     posterUrl: safePosterUrl(str(form, "posterUrl")),
+    prize: str(form, "prize").slice(0, 80),
+    location: str(form, "location").slice(0, 80),
+    bansPerTeam: Math.min(3, Math.max(0, num(form, "bansPerTeam", 0))),
   };
 }
 

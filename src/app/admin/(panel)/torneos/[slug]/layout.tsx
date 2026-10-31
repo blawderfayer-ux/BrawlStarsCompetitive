@@ -46,7 +46,7 @@ export default async function AdminTournamentLayout({
       </div>
       <nav className="no-scrollbar -mx-4 mb-5 flex gap-2 overflow-x-auto px-4">
         {tabs.map((t) => (
-          <Link key={t.href} href={t.href} className="shrink-0 rounded-xl bg-card px-3.5 py-2.5 text-sm font-extrabold uppercase text-muted">
+          <Link key={t.href} href={t.href} className="shrink-0 rounded-lg bg-card px-3.5 py-2.5 text-sm font-extrabold uppercase text-muted">
             {t.label}
           </Link>
         ))}

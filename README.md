@@ -17,9 +17,15 @@ juega; la plataforma organiza la competición.
   (chat con el rival y botones GANAMOS / PERDIMOS). Guía y video en `/como-jugar`.
 - “Partida en curso” con marcador y mapa actual, y avisos en vivo (“¡Team Alpha avanza a semifinales!”).
 - Bracket por ronda (cómodo en el celular) o cuadro completo con líneas.
+- **Bans a ciegas** (opcional, 1 a 3 por equipo): cada equipo prohíbe brawlers desde la sala y se revelan cuando los
+  dos enviaron, como los bans globales del competitivo oficial.
+- **Ranking**: campeones de cada torneo y tabla histórica de equipos (títulos, finales, partidas y diferencia de mapas).
+- Reglamento general basado en las reglas del Brawl Stars Championship, más las reglas propias de cada torneo.
 
 **Organización (admin y árbitros)**
-- Crear torneos (múltiples), configurar fecha, máximo de equipos, BO1/BO3/BO5/BO7 (también por ronda) y reglamento.
+- Crear torneos (múltiples), configurar fecha, lugar, premio, máximo de equipos, BO1/BO3/BO5/BO7 (también por ronda),
+  bans por equipo y reglamento.
+- Diagnóstico en `/api/salud`: dice si la base de datos responde y, si no, cómo arreglarlo.
 - Revisar inscripciones: aprobar, rechazar, pedir corrección, editar, asignar seeds.
 - Inscripción tardía: con el torneo empezado, un equipo nuevo entra en el lugar de un BYE de la primera ronda
   (si el equipo de ese BYE todavía no jugó su siguiente partida).

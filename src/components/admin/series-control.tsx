@@ -100,7 +100,7 @@ export function SeriesControl({
 
       {/* Registrar resultado del game actual */}
       {ready && game && s.status !== "cancelled" ? (
-        <section className="rounded-2xl border border-brand/40 bg-brand/5 p-3">
+        <section className="rounded-xl border border-brand/40 bg-brand/5 p-3">
           <p className="mb-2 text-xs font-extrabold uppercase text-muted">Game {game.number} · ¿Quién ganó?</p>
           <div className="mb-3">
             <ModeMapChip mode={game.mode} map={game.map} size="md" />
@@ -108,7 +108,7 @@ export function SeriesControl({
           {reports.length ? (
             <div
               className={cn(
-                "mb-3 rounded-xl border-2 border-ink px-3 py-2 text-sm font-bold",
+                "mb-3 rounded-lg border border-line px-3 py-2 text-sm font-bold",
                 agreed ? "bg-ok/25" : disputed ? "bg-red/25" : "bg-card",
               )}
             >
@@ -167,7 +167,7 @@ export function SeriesControl({
         </ActionForm>
       ) : null}
 
-      <details className="rounded-xl bg-bg-soft p-3">
+      <details className="rounded-lg bg-bg-soft p-3">
         <summary className="cursor-pointer text-sm font-bold">Horario, mapas y correcciones</summary>
         <div className="mt-3 space-y-5">
           <ActionForm action={scheduleSeriesAction} className="space-y-2">

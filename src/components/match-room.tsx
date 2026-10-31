@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { startTransition, useActionState, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import type { ActionResult } from "@/lib/action-result";
 import { cn, formatTime } from "@/lib/utils";
+import { BRAWLERS } from "@/lib/brawlers";
 import { PendingProvider, SubmitButton, useActionSubmit } from "./action-form";
 
 interface Message {
@@ -17,10 +18,18 @@ interface Message {
   createdAt: string;
 }
 
+interface BansState {
+  required: number;
+  mine: string[] | null;
+  sent: { A: boolean; B: boolean };
+  revealed: { A: string[] | null; B: string[] | null } | null;
+}
+
 interface RoomState {
   currentGame: number | null;
   reports: { teamId: string; winnerSlot: "A" | "B" }[];
   finished: boolean;
+  bans: BansState | null;
 }
 
 type Action = (prev: ActionResult | null, form: FormData) => Promise<ActionResult>;
@@ -63,6 +72,7 @@ export function MatchRoom({
   teamA,
   teamB,
   reportAction,
+  bansAction,
   confirmAction,
   logoutAction,
   initialGame,
@@ -73,6 +83,7 @@ export function MatchRoom({
   teamA: { id: string; name: string };
   teamB: { id: string; name: string };
   reportAction: Action;
+  bansAction: Action;
   /** Solo para el árbitro: confirma el ganador del game actual desde la sala. */
   confirmAction: Action;
   logoutAction: () => Promise<void>;
@@ -81,7 +92,7 @@ export function MatchRoom({
 }) {
   const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([]);
-  const [room, setRoom] = useState<RoomState>({ currentGame: initialGame, reports: [], finished: false });
+  const [room, setRoom] = useState<RoomState>({ currentGame: initialGame, reports: [], finished: false, bans: null });
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -103,7 +114,7 @@ export function MatchRoom({
           return [...prev, ...data.messages.filter((m) => !seen.has(m.id))];
         });
       }
-      setRoom({ currentGame: data.currentGame, reports: data.reports, finished: data.finished });
+      setRoom({ currentGame: data.currentGame, reports: data.reports, finished: data.finished, bans: data.bans ?? null });
       // Si el árbitro confirmó un game, se actualiza el marcador de la página.
       if (data.currentGame !== lastGame.current) {
         lastGame.current = data.currentGame;
@@ -164,7 +175,7 @@ export function MatchRoom({
 
   return (
     <section className="card overflow-hidden">
-      <div className="flex items-center justify-between gap-2 border-b-[2.5px] border-ink bg-card-hi px-4 py-2.5">
+      <div className="flex items-center justify-between gap-2 border-b border-line bg-card-hi px-4 py-2.5">
         <div className="min-w-0">
           <p className="title-ink text-lg leading-tight">Sala de la partida</p>
           <p className="truncate text-xs font-bold text-muted">
@@ -185,9 +196,21 @@ export function MatchRoom({
         ) : null}
       </div>
 
+      {room.bans && room.bans.required > 0 && !room.finished ? (
+        <BansPanel
+          bans={room.bans}
+          me={me}
+          seriesId={seriesId}
+          teamA={teamA}
+          teamB={teamB}
+          action={bansAction}
+          onDone={poll}
+        />
+      ) : null}
+
       {/* Reporte de resultado del game actual */}
-      {me.kind === "team" && room.currentGame && !room.finished ? (
-        <div className="border-b-[2.5px] border-ink bg-bg-soft p-3">
+      {me.kind === "team" && room.currentGame && !room.finished && !(room.bans && room.bans.required > 0 && !bothSent(room.bans)) ? (
+        <div className="border-b border-line bg-bg-soft p-3">
           <p className="text-xs font-black uppercase tracking-wider text-muted">Ahora: game {room.currentGame}</p>
           <p className="font-display text-lg leading-tight">{gameLabel}</p>
           <p className="mt-1 text-xs text-muted">
@@ -196,7 +219,7 @@ export function MatchRoom({
           </p>
           <p className="mt-3 text-sm font-extrabold">¿Terminó el game? ¿Cómo les fue?</p>
           {myReport ? (
-            <p className="rounded-xl border-2 border-ink bg-card px-3 py-2 text-sm font-bold">
+            <p className="rounded-lg border border-line bg-card px-3 py-2 text-sm font-bold">
               Reportaste: ganó <span className="text-brand">{nameOf(myReport.winnerSlot)}</span>. Esperando al árbitro.
             </p>
           ) : null}
@@ -217,13 +240,13 @@ export function MatchRoom({
       ) : null}
 
       {me.kind === "team" && room.finished ? (
-        <div className="border-b-[2.5px] border-ink bg-bg-soft p-3 text-sm font-bold">
+        <div className="border-b border-line bg-bg-soft p-3 text-sm font-bold">
           La partida terminó. Mira arriba el resultado y, si ganaron, vuelvan a “Mi equipo” para ver su siguiente partida.
         </div>
       ) : null}
 
       {me.kind === "staff" && room.currentGame && !room.finished ? (
-        <div className="border-b-[2.5px] border-ink bg-brand/10 p-3 text-sm font-bold">
+        <div className="border-b border-line bg-brand/10 p-3 text-sm font-bold">
           <p className="mb-2 text-xs font-black uppercase tracking-wider text-brand">
             Árbitro · confirmar game {room.currentGame} · {gameLabel}
           </p>
@@ -270,14 +293,14 @@ export function MatchRoom({
           const color = m.authorType === "staff" ? "bg-brand text-brand-ink" : m.teamId === teamA.id ? "bg-blue text-white" : "bg-red text-white";
           return (
             <div key={m.id} className={cn("flex", mine ? "justify-end" : "justify-start")}>
-              <div className={cn("max-w-[82%] rounded-2xl border-2 border-ink px-3 py-2 shadow-[0_2px_0_var(--ink)]", color)}>
+              <div className={cn("max-w-[82%] rounded-xl border border-line px-3 py-2", color)}>
                 <p className="text-[11px] font-black uppercase opacity-80">
                   {m.authorName} · {formatTime(m.createdAt)}
                 </p>
                 {m.imageUrl ? (
                   <a href={m.imageUrl} target="_blank" rel="noreferrer">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={m.imageUrl} alt="Foto enviada" className="mt-1 max-h-64 rounded-lg border-2 border-ink" />
+                    <img src={m.imageUrl} alt="Foto enviada" className="mt-1 max-h-64 rounded-lg border border-line" />
                   </a>
                 ) : null}
                 {m.text ? (
@@ -292,7 +315,7 @@ export function MatchRoom({
       </div>
 
       <form
-        className="flex items-end gap-2 border-t-[2.5px] border-ink bg-card-hi p-2"
+        className="flex items-end gap-2 border-t border-line bg-card-hi p-2"
         onSubmit={(e) => {
           e.preventDefault();
           send();
@@ -332,5 +355,90 @@ export function MatchRoom({
       </form>
       {error ? <p className="bg-red/20 px-3 py-2 text-sm font-bold text-red-200">{error}</p> : null}
     </section>
+  );
+}
+
+const bothSent = (b: BansState) => b.sent.A && b.sent.B;
+
+/** Bans a ciegas: cada equipo escribe sus brawlers; se revelan cuando los dos enviaron. */
+function BansPanel({
+  bans,
+  me,
+  seriesId,
+  teamA,
+  teamB,
+  action,
+  onDone,
+}: {
+  bans: BansState;
+  me: { kind: "staff"; name: string } | { kind: "team"; slot: "A" | "B"; teamId: string; name: string };
+  seriesId: string;
+  teamA: { id: string; name: string };
+  teamB: { id: string; name: string };
+  action: Action;
+  onDone: () => void;
+}) {
+  const [state, formAction, pending] = useActionState(action, null);
+  const onSubmit = useActionSubmit(formAction, {
+    confirm: "¿Enviar estos bans? Después no se pueden cambiar.",
+  });
+  useEffect(() => {
+    if (state?.ok) onDone();
+  }, [state, onDone]);
+
+  const both = bothSent(bans);
+  const list = (names: string[] | null) => (names?.length ? names.join(", ") : "—");
+  return (
+    <div className="border-b border-line bg-bg-soft p-3">
+      <p className="eyebrow">Bans · {bans.required} por equipo · a ciegas</p>
+      {both || me.kind === "staff" ? (
+        <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
+          {(["A", "B"] as const).map((slot) => (
+            <div key={slot} className={cn("rounded-md border-l-[3px] bg-card px-2.5 py-1.5", slot === "A" ? "border-blue" : "border-red")}>
+              <p className="font-display truncate text-xs uppercase tracking-wide text-muted">{slot === "A" ? teamA.name : teamB.name}</p>
+              <p className="font-semibold">{bans.revealed?.[slot] ? list(bans.revealed[slot]) : "Sin enviar"}</p>
+            </div>
+          ))}
+        </div>
+      ) : null}
+      {me.kind === "team" && !bans.mine ? (
+        <PendingProvider pending={pending}>
+          <form onSubmit={onSubmit} className="mt-2 space-y-2">
+            <p className="text-xs text-muted">
+              Escribe los brawlers que tu equipo prohíbe para toda la partida. Tu rival no los ve hasta que también envíe
+              los suyos. Antes de los bans no se puede reportar.
+            </p>
+            <input type="hidden" name="seriesId" value={seriesId} />
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+              {Array.from({ length: bans.required }, (_, i) => (
+                <input
+                  key={i}
+                  name="ban"
+                  list="brawler-list"
+                  required
+                  maxLength={24}
+                  autoComplete="off"
+                  placeholder={`Brawler ${i + 1}`}
+                  className="input !min-h-[42px]"
+                />
+              ))}
+            </div>
+            <datalist id="brawler-list">
+              {BRAWLERS.map((b) => (
+                <option key={b} value={b} />
+              ))}
+            </datalist>
+            <SubmitButton className="btn-primary btn-sm w-full" pendingText="Enviando…">
+              Enviar bans
+            </SubmitButton>
+            {state && !state.ok ? <p className="text-sm font-semibold text-rose-300">{state.error}</p> : null}
+          </form>
+        </PendingProvider>
+      ) : me.kind === "team" && !both ? (
+        <p className="mt-2 text-sm">
+          Tus bans: <b>{list(bans.mine)}</b>. Esperando a que el rival envíe los suyos para revelarlos.
+        </p>
+      ) : null}
+    </div>
   );
 }

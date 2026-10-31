@@ -75,7 +75,7 @@ export function MyTeamPanel({
         <TeamLogoutButton action={teamLogoutAction} slug={slug} />
       </div>
 
-      <div className={ready ? "card overflow-hidden outline-[3px] outline-brand outline" : "card overflow-hidden"}>
+      <div className={ready ? "card overflow-hidden outline-2 outline-brand outline" : "card overflow-hidden"}>
         <div className="flex items-start gap-3 p-4">
           {ready ? (
             <DoorOpen className="mt-0.5 shrink-0 text-brand" size={26} />
@@ -88,7 +88,7 @@ export function MyTeamPanel({
           </div>
         </div>
         {ready && roomHref ? (
-          <div className="space-y-3 border-t-[2.5px] border-ink bg-bg-soft p-4">
+          <div className="space-y-3 border-t border-line bg-bg-soft p-4">
             {current ? (
               <div>
                 <p className="mb-1 text-[11px] font-black uppercase tracking-wider text-muted">
@@ -122,7 +122,7 @@ export function MyTeamPanel({
               : "Si ganan, pasan solos a la siguiente ronda: vuelvan a esta página para ver su nueva partida.",
           ].map((text, i) => (
             <li key={i} className="flex gap-3">
-              <span className="font-display flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border-2 border-ink bg-brand text-base text-brand-ink">
+              <span className="font-display flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-line bg-brand text-base text-brand-ink">
                 {i + 1}
               </span>
               <span className="pt-0.5">{text}</span>

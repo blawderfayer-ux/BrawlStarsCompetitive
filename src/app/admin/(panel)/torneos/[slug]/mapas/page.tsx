@@ -65,7 +65,7 @@ export default async function RoundMapsPage({ params }: { params: Promise<{ slug
             ) : null}
             <div className="space-y-2">
               {roundSeries.map((s) => (
-                <div key={s.id} className="rounded-xl bg-bg-soft p-2.5">
+                <div key={s.id} className="rounded-lg bg-bg-soft p-2.5">
                   <p className="mb-1.5 truncate text-xs font-black text-muted">
                     #{s.number} · {s.teamA?.name ?? "Por definir"} vs {s.teamB?.name ?? "Por definir"}
                   </p>
@@ -87,7 +87,7 @@ export default async function RoundMapsPage({ params }: { params: Promise<{ slug
                 <Shuffle size={15} /> Sortear esta ronda de nuevo
               </SubmitButton>
             </ActionForm>
-            <details className="rounded-xl bg-bg-soft p-3">
+            <details className="rounded-lg bg-bg-soft p-3">
               <summary className="cursor-pointer text-sm font-bold">Fijar el mismo plan para toda la ronda</summary>
               <ActionForm action={updateRoundPlanAction} className="mt-3 space-y-2">
                 <input type="hidden" name="id" value={tournament.id} />

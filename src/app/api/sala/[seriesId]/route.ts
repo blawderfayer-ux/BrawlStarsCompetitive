@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { listMessages, postMessage, reportsForGame } from "@/lib/services/room";
+import { bansState, listMessages, postMessage, reportsForGame } from "@/lib/services/room";
+import { Tournament } from "@/models";
 import { UserError } from "@/lib/services/tx";
 import { loadSeriesWithAccess } from "@/lib/team-session";
 
@@ -14,6 +15,7 @@ export async function GET(req: Request, { params }: Ctx) {
   const after = new URL(req.url).searchParams.get("after");
   const messages = await listMessages(seriesId, after ? new Date(after) : undefined);
   const current = found.series.games.find((g) => g.status === "pending");
+  const t = await Tournament.findById(found.series.tournament, { bansPerTeam: 1 }).lean();
   return NextResponse.json(
     {
       messages,
@@ -22,6 +24,7 @@ export async function GET(req: Request, { params }: Ctx) {
       scoreA: found.series.scoreA,
       scoreB: found.series.scoreB,
       finished: !!found.series.winnerSlot,
+      bans: bansState(found.series, found.access, t?.bansPerTeam ?? 0),
     },
     { headers: { "Cache-Control": "no-store" } },
   );

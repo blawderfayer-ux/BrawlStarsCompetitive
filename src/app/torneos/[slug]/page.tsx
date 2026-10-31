@@ -101,7 +101,7 @@ export default async function TournamentHome({ params }: { params: Promise<{ slu
 
         {!tournament.bracketGeneratedAt ? (
           <section className="card overflow-hidden">
-            <div className="border-b-[2.5px] border-ink bg-blue px-4 py-2">
+            <div className="border-b border-line bg-blue px-4 py-2">
               <p className="font-display text-lg uppercase text-white">
                 {tournament.status === "registration_open" ? "Inscripciones abiertas" : "El bracket se publicará pronto"}
               </p>
@@ -111,7 +111,7 @@ export default async function TournamentHome({ params }: { params: Promise<{ slu
                 <span className="title-ink text-5xl leading-none">{tournament.approvedTeams}</span>
                 <span className="font-display pb-1 text-lg text-muted">/ {tournament.maxTeams} equipos aprobados</span>
               </div>
-              <div className="mt-3 h-4 overflow-hidden rounded-full border-2 border-ink bg-bg-soft">
+              <div className="mt-3 h-4 overflow-hidden rounded-full border border-line bg-bg-soft">
                 <div
                   className="h-full bg-brand"
                   style={{ width: `${Math.min(100, (tournament.approvedTeams / tournament.maxTeams) * 100)}%` }}
@@ -138,7 +138,7 @@ export default async function TournamentHome({ params }: { params: Promise<{ slu
           <section className="grid grid-cols-3 gap-3 text-center">
             {stats.map((stat) => (
               <div key={stat.label} className="card overflow-hidden">
-                <div className={`h-2 border-b-2 border-ink ${stat.color}`} />
+                <div className={`h-2 border-b-2 border-line ${stat.color}`} />
                 <div className="p-3">
                   <div className="title-ink text-4xl leading-none">{stat.value}</div>
                   <div className="mt-1 text-[11px] font-black uppercase leading-tight text-muted">{stat.label}</div>
@@ -151,7 +151,7 @@ export default async function TournamentHome({ params }: { params: Promise<{ slu
         <section>
           <SectionTitle>Novedades</SectionTitle>
           {events.length ? (
-            <ul className="card divide-y-2 divide-ink/60 overflow-hidden">
+            <ul className="card divide-y divide-line overflow-hidden">
               {events.slice(0, 12).map((e) => (
                 <li key={e.id} className="flex items-start justify-between gap-3 px-4 py-3">
                   <span className="min-w-0 text-sm font-bold [overflow-wrap:anywhere]">{e.message}</span>

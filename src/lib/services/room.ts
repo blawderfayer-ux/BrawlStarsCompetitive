@@ -3,7 +3,8 @@ import { randomInt } from "node:crypto";
 import { Types } from "mongoose";
 import { connectDB } from "../db";
 import type { RoomAccess } from "../team-session";
-import { ChatMessage, Series, Team, TournamentEvent, type SeriesDoc } from "@/models";
+import { cleanBans, revealedBans } from "../brawlers";
+import { ChatMessage, Series, Team, Tournament, TournamentEvent, type SeriesDoc } from "@/models";
 import { UserError } from "./tx";
 
 // Sin letras/números que se confunden (0/O, 1/I/L) para dictarlo por WhatsApp.
@@ -149,6 +150,10 @@ export async function reportResult(seriesId: string, access: RoomAccess, game: n
   if (series.winnerSlot) throw new UserError("La serie ya terminó.");
   const current = series.games.find((g) => g.status === "pending");
   if (!current || current.number !== game) throw new UserError("Ese game ya fue registrado. Recarga la página.");
+  const t = await Tournament.findById(series.tournament, { bansPerTeam: 1 }).lean();
+  if ((t?.bansPerTeam ?? 0) > 0 && !bansRevealed(series)) {
+    throw new UserError("Primero los dos equipos tienen que enviar sus bans.");
+  }
 
   const reports = (series.reports ?? []).filter((r) => !(r.game === game && String(r.team) === access.teamId));
   reports.push({ game, team: new Types.ObjectId(access.teamId), winnerSlot, createdAt: new Date() });
@@ -186,4 +191,73 @@ export function reportsForGame(series: Pick<SeriesDoc, "reports">, game: number)
   return (series.reports ?? [])
     .filter((r) => r.game === game)
     .map((r) => ({ game: r.game, teamId: String(r.team), winnerSlot: r.winnerSlot }));
+}
+
+/* ─────────────── Bans de brawlers (a ciegas) ─────────────── */
+
+function bansRevealed(series: Pick<SeriesDoc, "bans" | "teamA" | "teamB">) {
+  return revealedBans(
+    (series.bans ?? []).map((b) => ({ team: String(b.team), brawlers: b.brawlers })),
+    series.teamA ? String(series.teamA) : null,
+    series.teamB ? String(series.teamB) : null,
+  );
+}
+
+export interface BansState {
+  /** Cuántos bans manda cada equipo (0 = el torneo no usa bans). */
+  required: number;
+  /** Los bans que mandó mi equipo (null si todavía no). */
+  mine: string[] | null;
+  /** Qué equipos ya enviaron. */
+  sent: { A: boolean; B: boolean };
+  /** Los bans de los dos equipos, solo cuando ambos enviaron (o para el árbitro). */
+  revealed: { A: string[] | null; B: string[] | null } | null;
+}
+
+export function bansState(series: Pick<SeriesDoc, "bans" | "teamA" | "teamB">, access: RoomAccess, required: number): BansState {
+  const of = (team: unknown) => (series.bans ?? []).find((b) => team && String(b.team) === String(team))?.brawlers ?? null;
+  const a = of(series.teamA);
+  const b = of(series.teamB);
+  const both = !!(a && b);
+  return {
+    required,
+    mine: access.kind === "team" ? of(access.teamId) : null,
+    sent: { A: !!a, B: !!b },
+    revealed: both || access.kind === "staff" ? { A: a, B: b } : null,
+  };
+}
+
+/** Un equipo envía sus bans. No se pueden cambiar después; se revelan cuando el rival también envía. */
+export async function submitBans(seriesId: string, access: RoomAccess, input: string[]) {
+  if (access.kind !== "team") throw new UserError("Solo los equipos de la partida envían bans.");
+  await connectDB();
+  const series = await Series.findById(seriesId);
+  if (!series) throw new UserError("La partida no existe.");
+  const t = await Tournament.findById(series.tournament, { bansPerTeam: 1 }).lean();
+  const required = t?.bansPerTeam ?? 0;
+  if (!required) throw new UserError("Este torneo no usa bans.");
+  if (series.winnerSlot || series.games.some((g) => g.status !== "pending")) {
+    throw new UserError("La partida ya empezó: los bans se envían antes del primer game.");
+  }
+  if ((series.bans ?? []).some((b) => String(b.team) === access.teamId)) throw new UserError("Tu equipo ya envió sus bans.");
+  let brawlers: string[];
+  try {
+    brawlers = cleanBans(input, required);
+  } catch (err) {
+    throw new UserError((err as Error).message);
+  }
+  series.bans = [...(series.bans ?? []), { team: new Types.ObjectId(access.teamId), brawlers, createdAt: new Date() }];
+  await series.save();
+
+  const revealed = bansRevealed(series);
+  if (!revealed) {
+    await systemMessage(series, `${access.name} ya envió sus bans. Se revelan cuando el rival envíe los suyos.`);
+    return;
+  }
+  const names = await Team.find({ _id: { $in: [series.teamA, series.teamB] } }, { name: 1 }).lean();
+  const nameOf = (id: unknown) => names.find((n) => String(n._id) === String(id))?.name ?? "Equipo";
+  await systemMessage(
+    series,
+    `Bans revelados · ${nameOf(series.teamA)}: ${revealed.A.join(", ")} · ${nameOf(series.teamB)}: ${revealed.B.join(", ")}. Ninguno de esos brawlers se puede usar en esta partida.`,
+  );
 }

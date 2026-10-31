@@ -116,7 +116,7 @@ export default async function AdminTournamentSummary({ params }: { params: Promi
               Ver bracket público ↗
             </Link>
           </div>
-          <details className="rounded-xl bg-bg-soft p-3">
+          <details className="rounded-lg bg-bg-soft p-3">
             <summary className="cursor-pointer text-sm font-bold text-red-300">Reiniciar bracket (zona de peligro)</summary>
             <p className="my-2 text-sm text-muted">
               Borra todas las partidas y resultados. Los equipos aprobados se mantienen. Escribe REINICIAR para confirmar.

@@ -79,6 +79,8 @@ export interface SeriesView {
   games: GameView[];
   /** Resultados reportados por los equipos (pendientes de confirmar por el árbitro). */
   reports: { game: number; teamId: string; winnerSlot: "A" | "B" }[];
+  /** Bans de la partida, visibles solo cuando los dos equipos ya enviaron. */
+  bans: { A: string[]; B: string[] } | null;
 }
 
 export interface EventView {
@@ -103,6 +105,9 @@ export interface TournamentView {
   status: string;
   rules: string;
   posterUrl: string;
+  prize: string;
+  location: string;
+  bansPerTeam: number;
   mapPool: string[];
   roundPlans: { modeId: string | null; mapId: string | null }[][];
   totalRounds: number;

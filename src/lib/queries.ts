@@ -1,7 +1,9 @@
 import "server-only";
+import { revealedBans } from "./brawlers";
 import type { Types } from "mongoose";
 import { roundName } from "./bracket";
 import { connectDB } from "./db";
+import { slugify } from "./utils";
 import {
   GameMap,
   GameMode,
@@ -95,6 +97,9 @@ function toTournamentView(t: TournamentDoc, approvedTeams: number): TournamentVi
     status: t.status,
     rules: t.rules ?? "",
     posterUrl: t.posterUrl ?? "",
+    prize: t.prize ?? "",
+    location: t.location ?? "",
+    bansPerTeam: t.bansPerTeam ?? 0,
     mapPool: (t.mapPool ?? []).map(String),
     roundPlans: (t.roundPlans ?? []).map((games) =>
       games.map((g) => ({ modeId: idOf(g.mode), mapId: idOf(g.map) })),
@@ -224,6 +229,11 @@ function toSeriesView(
     scheduledAt: iso(s.scheduledAt),
     notes: s.notes ?? "",
     reports: (s.reports ?? []).map((r) => ({ game: r.game, teamId: String(r.team), winnerSlot: r.winnerSlot })),
+    bans: revealedBans(
+      (s.bans ?? []).map((b) => ({ team: String(b.team), brawlers: b.brawlers })),
+      s.teamA ? String(s.teamA) : null,
+      s.teamB ? String(s.teamB) : null,
+    ),
     games: (s.games ?? []).map((g) => ({
       number: g.number,
       status: g.status as "pending" | "finished" | "skipped",
@@ -259,4 +269,121 @@ export async function getPrivateEvents(tournamentId: string, limit = 50) {
     actorName: e.actor?.name ?? null,
     createdAt: iso(e.createdAt)!,
   }));
+}
+
+/* ─────────────── Ranking y campeones (todas las ediciones) ─────────────── */
+
+export interface ChampionEntry {
+  tournament: TournamentView;
+  champion: TeamView | null;
+  runnerUp: TeamView | null;
+  finalScore: string | null;
+}
+
+export interface RankingRow {
+  key: string;
+  team: TeamView;
+  tournaments: number;
+  titles: number;
+  finals: number;
+  seriesWon: number;
+  seriesLost: number;
+  gamesWon: number;
+  gamesLost: number;
+}
+
+/**
+ * Historial de campeones y ranking de equipos de todos los torneos publicados.
+ * Un equipo se reconoce entre torneos por su nombre (sin mayúsculas ni acentos).
+ */
+export async function getRanking() {
+  await connectDB();
+  const tournaments = await Tournament.find({ status: { $in: ["live", "finished"] } })
+    .sort({ startsAt: -1, createdAt: -1 })
+    .lean();
+  const ids = tournaments.map((t) => t._id);
+  const [teams, series] = await Promise.all([
+    Team.find({ tournament: { $in: ids }, registrationStatus: "approved" }).lean(),
+    Series.find({ tournament: { $in: ids }, isBye: false, winnerSlot: { $ne: null } }).lean(),
+  ]);
+  const teamById = new Map(teams.map((t) => [String(t._id), t]));
+  const keyOf = (t: TeamDoc) => slugify(t.name);
+  const count = new Map<string, number>();
+  for (const t of teams) count.set(String(t.tournament), (count.get(String(t.tournament)) ?? 0) + 1);
+
+  const champions: ChampionEntry[] = [];
+  for (const t of tournaments.filter((x) => x.status === "finished")) {
+    const final = series.find((s) => String(s.tournament) === String(t._id) && !s.nextKey);
+    const champ = t.championTeam ? teamById.get(String(t.championTeam)) : undefined;
+    const loserId = final ? (final.winnerSlot === "A" ? final.teamB : final.teamA) : null;
+    const runner = loserId ? teamById.get(String(loserId)) : undefined;
+    champions.push({
+      tournament: toTournamentView(t, count.get(String(t._id)) ?? 0),
+      champion: champ ? toTeamView(champ) : null,
+      runnerUp: runner ? toTeamView(runner) : null,
+      finalScore: final ? `${Math.max(final.scoreA, final.scoreB)}-${Math.min(final.scoreA, final.scoreB)}` : null,
+    });
+  }
+
+  const rows = new Map<string, RankingRow & { seen: Set<string> }>();
+  const row = (t: TeamDoc) => {
+    const key = keyOf(t);
+    let r = rows.get(key);
+    if (!r) {
+      r = { key, team: toTeamView(t), tournaments: 0, titles: 0, finals: 0, seriesWon: 0, seriesLost: 0, gamesWon: 0, gamesLost: 0, seen: new Set() };
+      rows.set(key, r);
+    }
+    if (!r.seen.has(String(t.tournament))) {
+      r.seen.add(String(t.tournament));
+      r.tournaments++;
+    }
+    return r;
+  };
+  for (const t of teams) row(t);
+  for (const s of series) {
+    const a = s.teamA ? teamById.get(String(s.teamA)) : undefined;
+    const b = s.teamB ? teamById.get(String(s.teamB)) : undefined;
+    if (!a || !b) continue;
+    const [w, l, ws, ls] = s.winnerSlot === "A" ? [a, b, s.scoreA, s.scoreB] : [b, a, s.scoreB, s.scoreA];
+    const rw = row(w);
+    const rl = row(l);
+    rw.seriesWon++;
+    rl.seriesLost++;
+    rw.gamesWon += ws;
+    rw.gamesLost += ls;
+    rl.gamesWon += ls;
+    rl.gamesLost += ws;
+    if (!s.nextKey) {
+      rw.finals++;
+      rl.finals++;
+    }
+  }
+  for (const c of champions) {
+    if (c.champion) {
+      const r = rows.get(slugify(c.champion.name));
+      if (r) r.titles++;
+    }
+  }
+  const ranking = [...rows.values()]
+    .filter((r) => r.seriesWon + r.seriesLost > 0)
+    .sort(
+      (x, y) =>
+        y.titles - x.titles ||
+        y.finals - x.finals ||
+        y.seriesWon - x.seriesWon ||
+        y.gamesWon - y.gamesLost - (x.gamesWon - x.gamesLost) ||
+        x.seriesLost - y.seriesLost,
+    )
+    .map((r): RankingRow => ({
+      key: r.key,
+      team: r.team,
+      tournaments: r.tournaments,
+      titles: r.titles,
+      finals: r.finals,
+      seriesWon: r.seriesWon,
+      seriesLost: r.seriesLost,
+      gamesWon: r.gamesWon,
+      gamesLost: r.gamesLost,
+    }));
+  return { champions, ranking };
 }

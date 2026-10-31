@@ -20,12 +20,12 @@ export function StatusBadge({ map, value, className }: { map: BadgeMap; value: s
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg border-2 border-ink px-2 py-0.5 text-[11px] font-black uppercase tracking-wide shadow-[0_2px_0_var(--ink)]",
+        "font-display inline-flex items-center gap-1.5 whitespace-nowrap rounded-md px-2 py-0.5 text-[11px] uppercase tracking-wider ring-1 ring-inset",
         b.className,
         className,
       )}
     >
-      {value === "live" ? <span className="live-dot !h-2 !w-2 !bg-white" aria-hidden /> : null}
+      {value === "live" ? <span className="live-dot !h-1.5 !w-1.5" aria-hidden /> : null}
       {b.label}
     </span>
   );
@@ -47,7 +47,7 @@ export function TeamLogo({
   className?: string;
 }) {
   const style = { width: size, height: size };
-  const base = "shrink-0 rounded-xl border-2 border-ink shadow-[0_2px_0_var(--ink)]";
+  const base = "shrink-0 rounded-md";
   if (!team) {
     return (
       <span style={style} className={cn(base, "inline-flex items-center justify-center bg-bg-soft font-black text-muted", className)}>
@@ -64,7 +64,7 @@ export function TeamLogo({
   return (
     <span
       style={{ ...style, backgroundColor: team.color, fontSize: size * 0.4 }}
-      className={cn(base, "title-ink inline-flex items-center justify-center text-white", className)}
+      className={cn(base, "font-display inline-flex items-center justify-center text-white ring-1 ring-inset ring-white/15", className)}
       aria-hidden
     >
       {initials(team.name)}
@@ -104,16 +104,16 @@ export function ModeMapChip({
   return (
     <span className="inline-flex min-w-0 items-center gap-2.5">
       <span
-        className={cn(box, "inline-flex shrink-0 items-center justify-center rounded-xl border-2 border-ink text-white shadow-[0_2px_0_var(--ink)]")}
+        className={cn(box, "inline-flex shrink-0 items-center justify-center rounded-md text-white")}
         style={{ backgroundColor: mode?.color ?? "#555" }}
       >
         <ModeIcon mode={mode} size={icon} />
       </span>
       <span className="min-w-0 leading-tight">
-        <span className={cn("block font-black uppercase tracking-wide", size === "lg" ? "text-sm" : "text-[11px]")} style={{ color: mode?.color }}>
+        <span className={cn("font-display block uppercase tracking-wider", size === "lg" ? "text-sm" : "text-[11px]")} style={{ color: mode?.color }}>
           {mode?.name ?? "Modo"}
         </span>
-        <span className={cn("font-display block truncate", size === "lg" ? "text-2xl" : "text-base")}>
+        <span className={cn("font-display block truncate", size === "lg" ? "text-2xl" : "text-[17px]")}>
           {map?.name ?? "Mapa por definir"}
         </span>
       </span>
@@ -123,9 +123,9 @@ export function ModeMapChip({
 
 export function SectionTitle({ children, action }: { children: ReactNode; action?: ReactNode }) {
   return (
-    <div className="mb-3 flex items-center justify-between gap-3">
-      <h2 className="title-ink flex items-center gap-2 text-2xl uppercase">
-        <span className="inline-block h-6 w-2 -skew-x-12 rounded-sm border-2 border-ink bg-brand" aria-hidden />
+    <div className="mb-3 flex items-end justify-between gap-3 border-b border-line pb-2">
+      <h2 className="font-display flex items-center gap-2 text-xl uppercase tracking-wide">
+        <span className="inline-block h-4 w-1 rounded-sm bg-brand" aria-hidden />
         {children}
       </h2>
       {action}
@@ -141,9 +141,9 @@ export function EmptyState({ title, children, image = "/img/skull.webp" }: { tit
         alt=""
         width={72}
         height={72}
-        className="mx-auto h-[72px] w-[72px] rounded-2xl border-2 border-ink object-cover shadow-[0_3px_0_var(--ink)]"
+        className="mx-auto h-14 w-14 rounded-lg object-cover opacity-80"
       />
-      <p className="title-ink mt-3 text-xl">{title}</p>
+      <p className="font-display mt-3 text-xl uppercase">{title}</p>
       {children ? <div className="mt-1 text-sm font-semibold text-muted">{children}</div> : null}
     </div>
   );

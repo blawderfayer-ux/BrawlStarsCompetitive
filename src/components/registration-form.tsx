@@ -97,7 +97,7 @@ function PlayerFields({
           ].map((o) => (
             <label
               key={o.value}
-              className={`font-display flex min-h-[44px] cursor-pointer items-center justify-center rounded-xl border-2 border-ink bg-bg-soft text-sm uppercase ${o.on}`}
+              className={`font-display flex min-h-[44px] cursor-pointer items-center justify-center rounded-lg border border-line bg-bg-soft text-sm uppercase ${o.on}`}
             >
               <input
                 type="radio"
@@ -186,7 +186,7 @@ export function RegistrationForm({
             <button
               type="button"
               onClick={() => logoInput.current?.click()}
-              className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-line bg-bg-soft text-3xl"
+              className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-dashed border-line bg-bg-soft text-3xl"
               style={preview ? undefined : { background: `${color}33` }}
               aria-label="Subir logo del equipo"
             >
@@ -229,7 +229,7 @@ export function RegistrationForm({
                   key={c}
                   type="button"
                   onClick={() => setColor(c)}
-                  className="h-10 w-10 rounded-xl border-2"
+                  className="h-10 w-10 rounded-lg border"
                   style={{ background: c, borderColor: c === color ? "white" : "transparent" }}
                   aria-label={`Color ${c}`}
                   aria-pressed={c === color}
@@ -270,12 +270,12 @@ export function RegistrationForm({
         </section>
 
         {state && !state.ok ? (
-          <p role="alert" className="rounded-xl bg-red-500/15 px-4 py-3 text-sm font-bold text-red-300">
+          <p role="alert" className="rounded-lg bg-red-500/15 px-4 py-3 text-sm font-bold text-red-300">
             {state.error}
           </p>
         ) : null}
         {state?.ok && state.message ? (
-          <p role="status" className="rounded-xl bg-emerald-500/15 px-4 py-3 text-sm font-bold text-emerald-300">
+          <p role="status" className="rounded-lg bg-emerald-500/15 px-4 py-3 text-sm font-bold text-emerald-300">
             {state.message}
           </p>
         ) : null}

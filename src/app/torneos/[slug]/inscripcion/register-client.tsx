@@ -16,7 +16,7 @@ function SuccessPanel({ token, slug }: { token: string; slug: string }) {
       <p className="text-sm">
         Estado: <span className="font-extrabold text-amber-300">PENDIENTE</span>. La organización revisará tu equipo.
       </p>
-      <div className="rounded-2xl bg-bg-soft p-4 text-left">
+      <div className="rounded-xl bg-bg-soft p-4 text-left">
         <p className="text-sm font-extrabold">Guarda este enlace privado</p>
         <p className="mb-2 text-xs text-muted">
           Con él puedes ver el estado de tu inscripción, corregirla si te lo piden y, cuando te aprueben, ver el

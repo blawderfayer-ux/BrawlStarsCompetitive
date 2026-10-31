@@ -12,7 +12,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
   const isAdmin = user.role === "admin";
   return (
     <Container className="py-4">
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-accent/40 bg-accent/10 px-4 py-3">
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-accent/40 bg-accent/10 px-4 py-3">
         <div className="min-w-0">
           <p className="text-[11px] font-extrabold uppercase tracking-wider text-accent">Administración</p>
           <p className="truncate text-sm font-bold">

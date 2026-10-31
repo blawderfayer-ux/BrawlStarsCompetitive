@@ -47,7 +47,7 @@ export default function HowToPlayPage() {
         <ol className="space-y-3">
           {STEPS.map(([title, text], i) => (
             <li key={title} className="card flex gap-3 p-4">
-              <span className="font-display flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-ink bg-brand text-2xl text-brand-ink shadow-[0_2px_0_var(--ink)]">
+              <span className="font-display flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-line bg-brand text-2xl text-brand-ink">
                 {i + 1}
               </span>
               <div>

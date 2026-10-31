@@ -1,4 +1,4 @@
-import { Clock, Crown } from "lucide-react";
+import { Clock } from "lucide-react";
 import Link from "next/link";
 import { SERIES_STATUS } from "@/lib/labels";
 import { cn, formatDateTime } from "@/lib/utils";
@@ -10,8 +10,8 @@ export function currentGameOf(series: SeriesView) {
   return series.games.find((g) => g.status === "pending") ?? null;
 }
 
-/** Un lado del enfrentamiento: azul (A) a la izquierda, rojo (B) a la derecha, como en el juego. */
-function Side({
+/** Una fila del marcador: franja azul (A) o roja (B), escudo, nombre y resultado. */
+function TeamRow({
   team,
   score,
   side,
@@ -30,33 +30,41 @@ function Side({
   showScore: boolean;
   compact: boolean;
 }) {
-  const blue = side === "A";
   return (
     <div
       className={cn(
-        "relative flex min-w-0 flex-col items-center gap-1.5 px-2 text-center",
-        compact ? "py-3" : "py-4",
-        blue ? "bg-blue/25" : "bg-red/25",
-        lost && "opacity-50 grayscale-[40%]",
+        "flex items-center gap-3 border-l-[3px] pr-3 pl-2.5",
+        compact ? "py-2" : "py-2.5",
+        side === "A" ? "border-blue" : "border-red",
+        won && "bg-brand/[0.06]",
       )}
     >
-      {won ? <Crown size={18} className="absolute top-1.5 text-brand drop-shadow-[0_2px_0_var(--ink)]" fill="currentColor" /> : null}
-      <TeamLogo team={team} size={compact ? 40 : 48} className={won ? "mt-3" : undefined} />
+      <TeamLogo team={team} size={compact ? 28 : 34} className={lost ? "opacity-50" : undefined} />
       <span
         className={cn(
-          "font-display w-full truncate leading-tight",
-          compact ? "text-sm" : "text-base",
-          highlight ? "text-brand" : team ? "text-text" : "text-muted",
+          "font-display min-w-0 flex-1 truncate leading-tight",
+          compact ? "text-[17px]" : "text-lg",
+          highlight ? "text-brand" : !team ? "text-muted" : lost ? "text-muted" : "text-text",
         )}
       >
         {team?.name ?? "Por definir"}
       </span>
-      {showScore ? <span className={cn("title-ink text-3xl leading-none", won ? "text-brand" : "text-white")}>{score}</span> : null}
+      {showScore ? (
+        <span
+          className={cn(
+            "font-display w-7 text-center leading-none",
+            compact ? "text-xl" : "text-2xl",
+            won ? "text-brand" : lost ? "text-muted" : "text-text",
+          )}
+        >
+          {score}
+        </span>
+      ) : null}
     </div>
   );
 }
 
-/** Tarjeta de un enfrentamiento. Sirve para listas, "próxima partida" y el panel. */
+/** Tarjeta de un enfrentamiento, estilo marcador de esports. Sirve para listas, "mi partida" y el panel. */
 export function SeriesCard({
   series,
   href,
@@ -71,58 +79,54 @@ export function SeriesCard({
   const game = currentGameOf(series);
   const started = series.scoreA + series.scoreB > 0 || !!series.winnerSlot;
   const showScore = started && !series.isBye;
+  const live = series.status === "live";
   const body = (
-    <div className={cn("card overflow-hidden", series.status === "live" && "outline-[3px] outline-offset-0 outline-live outline")}>
-      <div className="flex items-center justify-between gap-2 border-b-[2.5px] border-ink bg-card-hi px-3 py-2">
-        <span className="font-display min-w-0 truncate text-sm uppercase text-muted">
-          {series.isBye ? "BYE" : `#${series.number}`} · {series.roundName} · <span className="text-text">BO{series.bestOf}</span>
+    <div className={cn("card overflow-hidden transition-colors", live && "ring-1 ring-live", href && "hover:border-muted/40")}>
+      <div className="flex items-center justify-between gap-2 border-b border-line bg-bg-soft px-3 py-1.5">
+        <span className="font-display min-w-0 truncate text-xs uppercase tracking-wider text-muted">
+          {series.isBye ? "BYE" : `Partida ${series.number}`} · {series.roundName} · <span className="text-text">BO{series.bestOf}</span>
         </span>
         <StatusBadge map={SERIES_STATUS} value={series.status} />
       </div>
 
-      <div className="relative grid grid-cols-2">
-        <Side
-          team={series.teamA}
-          score={series.scoreA}
-          side="A"
-          won={series.winnerSlot === "A"}
-          lost={series.winnerSlot === "B"}
-          highlight={!!highlightTeamId && series.teamA?.id === highlightTeamId}
-          showScore={showScore}
-          compact={compact}
-        />
-        <Side
-          team={series.teamB}
-          score={series.scoreB}
-          side="B"
-          won={series.winnerSlot === "B"}
-          lost={series.winnerSlot === "A"}
-          highlight={!!highlightTeamId && series.teamB?.id === highlightTeamId}
-          showScore={showScore}
-          compact={compact}
-        />
-        {/* Insignia "VS" inclinada sobre la línea central */}
-        <span className="title-ink pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -skew-x-12 rounded-lg border-2 border-ink bg-brand px-1.5 text-lg leading-tight text-white shadow-[0_3px_0_var(--ink)]">
-          VS
-        </span>
-      </div>
+      <TeamRow
+        team={series.teamA}
+        score={series.scoreA}
+        side="A"
+        won={series.winnerSlot === "A"}
+        lost={series.winnerSlot === "B"}
+        highlight={!!highlightTeamId && series.teamA?.id === highlightTeamId}
+        showScore={showScore}
+        compact={compact}
+      />
+      <div className="h-px bg-line" />
+      <TeamRow
+        team={series.teamB}
+        score={series.scoreB}
+        side="B"
+        won={series.winnerSlot === "B"}
+        lost={series.winnerSlot === "A"}
+        highlight={!!highlightTeamId && series.teamB?.id === highlightTeamId}
+        showScore={showScore}
+        compact={compact}
+      />
 
       {!compact && !series.isBye && (game || series.scheduledAt || series.walkover) ? (
-        <div className="flex flex-wrap items-center justify-between gap-2 border-t-[2.5px] border-ink bg-bg-soft px-3 py-2.5">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line bg-bg-soft/60 px-3 py-2">
           {game ? (
             <div className="min-w-0">
-              <div className="mb-1 text-[10px] font-black uppercase tracking-wider text-muted">
-                {series.status === "live" ? "Jugando ahora" : "Primer mapa"} · Game {game.number}
+              <div className="eyebrow mb-1 !text-[10px]">
+                {live ? "Jugando ahora" : "Primer mapa"} · Game {game.number}
               </div>
               <ModeMapChip mode={game.mode} map={game.map} size="sm" />
             </div>
           ) : series.walkover ? (
-            <span className="text-sm font-bold text-muted">Ganó por walkover</span>
+            <span className="text-sm font-semibold text-muted">Ganó por walkover</span>
           ) : (
             <span />
           )}
           {series.scheduledAt && !series.winnerSlot ? (
-            <span className="inline-flex items-center gap-1 rounded-lg border-2 border-ink bg-card px-2 py-1 text-xs font-black">
+            <span className="font-display inline-flex items-center gap-1 rounded-md bg-card-hi px-2 py-1 text-sm">
               <Clock size={13} /> {formatDateTime(series.scheduledAt)}
             </span>
           ) : null}
@@ -131,7 +135,7 @@ export function SeriesCard({
     </div>
   );
   return href ? (
-    <Link href={href} className="block transition-transform active:translate-y-0.5">
+    <Link href={href} className="block">
       {body}
     </Link>
   ) : (
