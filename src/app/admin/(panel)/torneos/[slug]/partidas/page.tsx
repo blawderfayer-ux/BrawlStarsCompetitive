@@ -50,7 +50,7 @@ export default async function AdminMatchesPage({
             key={f.key}
             href={`?ver=${f.key}`}
             className={cn(
-              "shrink-0 rounded-xl border px-3 py-2 text-sm font-extrabold",
+              "shrink-0 rounded-lg border px-3 py-2 text-sm font-extrabold",
               ver === f.key ? "border-brand bg-brand/15 text-brand" : "border-line bg-card text-muted",
             )}
           >

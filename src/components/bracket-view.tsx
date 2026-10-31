@@ -46,7 +46,7 @@ function MiniSeries({ s, slug, highlight }: { s: SeriesView; slug: string; highl
   const content = (
     <div
       className={cn(
-        "flex h-full flex-col justify-center overflow-hidden rounded-xl border bg-card",
+        "flex h-full flex-col justify-center overflow-hidden rounded-lg border bg-card",
         s.status === "live" ? "border-live shadow-[0_0_16px_#f43f5e55]" : hit ? "border-brand" : "border-line",
         s.isBye && "border-dashed opacity-70",
       )}
@@ -113,8 +113,8 @@ function FullTree({ series, totalRounds, slug, highlight }: { series: SeriesView
                 key={s.key}
                 d={`M${x1},${y1} H${mid} V${y2} H${x2}`}
                 fill="none"
-                stroke={done ? "#ffd23f" : "#2f2a66"}
-                strokeWidth={done ? 2.5 : 2}
+                stroke={done ? "#ffcd1c" : "#2a3347"}
+                strokeWidth={done ? 2 : 1.5}
               />
             );
           })}
@@ -169,14 +169,14 @@ export function BracketView({
         </div>
       ) : null}
 
-      <div className="mb-4 grid grid-cols-2 gap-2 rounded-2xl bg-card p-1">
+      <div className="mb-4 grid grid-cols-2 gap-2 rounded-xl bg-card p-1">
         {(["rounds", "tree"] as const).map((m) => (
           <button
             key={m}
             type="button"
             onClick={() => setMode(m)}
             className={cn(
-              "min-h-[42px] rounded-xl text-sm font-extrabold uppercase",
+              "min-h-[42px] rounded-lg text-sm font-extrabold uppercase",
               mode === m ? "bg-accent text-white" : "text-muted",
             )}
           >
@@ -198,7 +198,7 @@ export function BracketView({
                   type="button"
                   onClick={() => setRound(r)}
                   className={cn(
-                    "flex shrink-0 items-center gap-1.5 rounded-xl border px-3.5 py-2 text-sm font-extrabold uppercase",
+                    "flex shrink-0 items-center gap-1.5 rounded-lg border px-3.5 py-2 text-sm font-extrabold uppercase",
                     r === round ? "border-brand bg-brand/15 text-brand" : "border-line bg-card text-muted",
                   )}
                 >
@@ -220,7 +220,7 @@ export function BracketView({
                 {byes.map((s) => {
                   const team = s.winnerSlot === "A" ? s.teamA : s.teamB;
                   return (
-                    <span key={s.key} className="flex items-center gap-2 rounded-xl bg-card px-3 py-2 text-sm font-bold">
+                    <span key={s.key} className="flex items-center gap-2 rounded-lg bg-card px-3 py-2 text-sm font-bold">
                       <TeamLogo team={team} size={22} className="!rounded-md" />
                       {team?.name}
                     </span>

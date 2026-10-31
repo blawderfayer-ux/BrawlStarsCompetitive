@@ -50,7 +50,7 @@ export default async function MyRegistrationPage({ params }: { params: Promise<{
           <p className="font-extrabold">¡Tu equipo fue aprobado!</p>
           <p className="mt-1 text-sm text-muted">Ya aparece en la lista oficial del torneo.</p>
           {team.accessCode ? (
-            <div className="mt-3 rounded-xl border-2 border-ink bg-bg-soft p-3">
+            <div className="mt-3 rounded-lg border border-line bg-bg-soft p-3">
               <p className="text-xs font-black uppercase text-muted">Código de tu equipo para la sala de partidas</p>
               <p className="font-mono text-2xl tracking-[0.3em]">{team.accessCode}</p>
               <p className="mt-1 text-xs text-muted">

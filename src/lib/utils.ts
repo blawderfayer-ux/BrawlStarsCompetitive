@@ -68,3 +68,18 @@ export function timeAgo(value: string | Date) {
   if (diff < 86400) return `hace ${Math.floor(diff / 3600)} h`;
   return `hace ${Math.floor(diff / 86400)} d`;
 }
+
+/** Solo la fecha, ej. "23 sept 2026". */
+export function formatDate(value: string | Date | null | undefined) {
+  if (!value) return null;
+  return new Intl.DateTimeFormat("es-BO", { timeZone: TIMEZONE, day: "numeric", month: "short", year: "numeric" }).format(
+    new Date(value),
+  );
+}
+
+/** "BO3" si todas las rondas usan el mismo formato; si no, "BO1 → BO3 → BO5". */
+export function bestOfLabel(defaultBestOf: number, byRound: number[]) {
+  const list = byRound.length ? byRound : [defaultBestOf];
+  const steps = list.filter((n, i) => i === 0 || n !== list[i - 1]);
+  return steps.map((n) => `BO${n}`).join(" → ");
+}

@@ -9,7 +9,7 @@ import { SectionTitle } from "@/components/ui";
 import { getRoomAccess, getTeamSession } from "@/lib/team-session";
 import { formatDateTime } from "@/lib/utils";
 import { reportGameAction } from "@/app/admin/actions";
-import { reportResultAction, teamLoginAction, teamLogoutAction } from "../../../actions";
+import { reportResultAction, submitBansAction, teamLoginAction, teamLogoutAction } from "../../../actions";
 import { loadTournament } from "../../data";
 
 export default async function MatchPage({ params }: { params: Promise<{ slug: string; number: string }> }) {
@@ -53,6 +53,7 @@ export default async function MatchPage({ params }: { params: Promise<{ slug: st
               teamA={{ id: s.teamA.id, name: s.teamA.name }}
               teamB={{ id: s.teamB.id, name: s.teamB.name }}
               reportAction={reportResultAction}
+              bansAction={submitBansAction}
               confirmAction={reportGameAction}
               logoutAction={teamLogoutAction}
               initialGame={current?.number ?? null}
@@ -87,6 +88,26 @@ export default async function MatchPage({ params }: { params: Promise<{ slug: st
             />
           )}
         </div>
+      ) : null}
+
+      {s.bans && s.teamA && s.teamB ? (
+        <section>
+          <SectionTitle>Bans de la partida</SectionTitle>
+          <div className="grid grid-cols-2 gap-3">
+            {([["A", s.teamA, s.bans.A], ["B", s.teamB, s.bans.B]] as const).map(([slot, team, list]) => (
+              <div key={slot} className={`card border-l-[3px] p-3 ${slot === "A" ? "border-l-blue" : "border-l-red"}`}>
+                <p className="font-display truncate text-sm uppercase tracking-wide text-muted">{team.name}</p>
+                <ul className="mt-1 space-y-0.5">
+                  {list.map((b) => (
+                    <li key={b} className="font-display text-lg leading-tight line-through decoration-red/70 decoration-2">
+                      {b}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </section>
       ) : null}
 
       <section>

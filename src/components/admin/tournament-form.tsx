@@ -64,6 +64,35 @@ export function TournamentForm({
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
+            <label className="label" htmlFor="prize">
+              Premio (opcional)
+            </label>
+            <input id="prize" name="prize" className="input" maxLength={80} defaultValue={tournament?.prize} placeholder="200 Bs" />
+          </div>
+          <div>
+            <label className="label" htmlFor="location">
+              Lugar (opcional)
+            </label>
+            <input id="location" name="location" className="input" maxLength={80} defaultValue={tournament?.location} placeholder="Balcón FICCT / Online" />
+          </div>
+        </div>
+        <div>
+          <label className="label" htmlFor="bansPerTeam">
+            Bans de brawlers por equipo
+          </label>
+          <select id="bansPerTeam" name="bansPerTeam" className="input" defaultValue={String(tournament?.bansPerTeam ?? 0)}>
+            <option value="0">Sin bans</option>
+            <option value="1">1 ban por equipo</option>
+            <option value="2">2 bans por equipo</option>
+            <option value="3">3 bans por equipo</option>
+          </select>
+          <p className="mt-1 text-xs text-muted">
+            Como en el competitivo oficial: antes de jugar, cada equipo prohíbe brawlers a ciegas desde la sala de la
+            partida. Se revelan cuando los dos equipos enviaron los suyos y valen para toda la partida.
+          </p>
+        </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
             <label className="label" htmlFor="startsAt">
               Fecha y hora de inicio
             </label>

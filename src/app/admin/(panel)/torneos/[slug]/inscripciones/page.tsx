@@ -44,9 +44,9 @@ function EntryControl({ team }: { team: TeamAdminView }) {
     </ActionForm>
   );
   return (
-    <div className="flex flex-wrap items-center gap-2 rounded-xl border-2 border-ink bg-bg-soft p-2">
+    <div className="flex flex-wrap items-center gap-2 rounded-lg border border-line bg-bg-soft p-2">
       <span
-        className={`rounded-lg border-2 border-ink px-2 py-0.5 text-xs font-black uppercase ${
+        className={`rounded-lg border border-line px-2 py-0.5 text-xs font-black uppercase ${
           fee === "free" ? "bg-ok text-ink" : fee === "pays" ? (team.paid ? "bg-ok text-ink" : "bg-red text-white") : "bg-amber-400 text-ink"
         }`}
       >
@@ -232,12 +232,12 @@ export default async function RegistrationsPage({ params }: { params: Promise<{ 
             Cada equipo entra a “Mi equipo” con este código: ahí ve su partida, chatea con el rival y reporta resultados.
             Envíaselo por privado (botón “Mensaje”, ya trae el link y las instrucciones).
           </p>
-          <ul className="mt-3 divide-y-2 divide-ink/50">
+          <ul className="mt-3 divide-y divide-line">
             {approvedTeams.map((t) => (
               <li key={t.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
                 <span className="min-w-0 truncate font-extrabold">{t.name}</span>
                 <span className="flex items-center gap-2">
-                  <span className="rounded-lg border-2 border-ink bg-bg-soft px-2 py-1 font-mono text-lg tracking-widest">{t.accessCode}</span>
+                  <span className="rounded-lg border border-line bg-bg-soft px-2 py-1 font-mono text-lg tracking-widest">{t.accessCode}</span>
                   <CopyButton text={codeMessage(t)} label="Mensaje" />
                   <ActionForm action={regenerateCodeAction} confirm={`¿Generar un código nuevo para ${t.name}? El anterior deja de funcionar.`} showSuccess={false}>
                     <input type="hidden" name="teamId" value={t.id} />
@@ -288,7 +288,7 @@ export default async function RegistrationsPage({ params }: { params: Promise<{ 
                     </div>
                   </header>
 
-                  <ul className="grid gap-1 rounded-xl bg-bg-soft p-3 text-sm sm:grid-cols-2">
+                  <ul className="grid gap-1 rounded-lg bg-bg-soft p-3 text-sm sm:grid-cols-2">
                     {team.members.map((m, i) => (
                       <li key={i} className="flex justify-between gap-2">
                         <span className="truncate font-bold">
@@ -326,7 +326,7 @@ export default async function RegistrationsPage({ params }: { params: Promise<{ 
                     </ActionForm>
                   ) : null}
 
-                  <details className="rounded-xl bg-bg-soft p-3">
+                  <details className="rounded-lg bg-bg-soft p-3">
                     <summary className="cursor-pointer text-sm font-bold">Editar datos del equipo</summary>
                     <div className="mt-3">
                       <RegistrationForm

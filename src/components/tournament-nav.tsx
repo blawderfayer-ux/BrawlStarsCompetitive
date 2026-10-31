@@ -19,7 +19,7 @@ export function TournamentNav({ slug }: { slug: string }) {
   const pathname = usePathname();
   const base = `/torneos/${slug}`;
   return (
-    <nav className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 pt-1 pb-2" aria-label="Secciones del torneo">
+    <nav className="no-scrollbar -mx-4 flex gap-1 overflow-x-auto px-4" aria-label="Secciones del torneo">
       {TABS.map((t) => {
         const href = base + t.href;
         const active = t.href === "" ? pathname === base : pathname.startsWith(href);
@@ -30,11 +30,12 @@ export function TournamentNav({ slug }: { slug: string }) {
             href={href}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "font-display flex shrink-0 items-center gap-1.5 rounded-xl border-2 border-ink px-3.5 py-2 text-sm uppercase shadow-[0_3px_0_var(--ink)] transition-transform active:translate-y-0.5",
-              active ? "bg-brand text-brand-ink" : "bg-card-hi text-text",
+              "font-display flex shrink-0 items-center gap-1.5 border-b-2 px-3 py-3 text-[15px] uppercase tracking-wide transition-colors",
+              active ? "border-brand text-text" : "border-transparent text-muted hover:text-text",
+              t.href === "/mi-equipo" && !active && "text-brand/90",
             )}
           >
-            <Icon size={16} strokeWidth={2.6} aria-hidden />
+            <Icon size={15} strokeWidth={2.4} aria-hidden />
             {t.label}
           </Link>
         );

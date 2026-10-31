@@ -39,6 +39,9 @@ export interface TournamentInput {
   roundDurationMinutes: number;
   rules: string;
   posterUrl: string;
+  prize: string;
+  location: string;
+  bansPerTeam: number;
 }
 
 function validateBestOf(n: number) {
@@ -93,6 +96,9 @@ export async function updateTournament(id: string, input: TournamentInput, actor
     roundDurationMinutes: input.roundDurationMinutes,
     rules: input.rules,
     posterUrl: input.posterUrl,
+    prize: input.prize,
+    location: input.location,
+    bansPerTeam: input.bansPerTeam,
     // Con el bracket generado, el BO de cada serie ya está fijado; no se cambia aquí.
     ...(bracketLocked ? {} : { defaultBestOf: input.defaultBestOf, bestOfByRound: input.bestOfByRound }),
   });

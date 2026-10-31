@@ -131,6 +131,12 @@ export interface TournamentDoc {
   status: TournamentStatus;
   rules: string;
   posterUrl: string;
+  /** Premio en texto libre (ej. "200 Bs + skins"). */
+  prize: string;
+  /** Lugar (ej. "Balcón FICCT" u "Online"). */
+  location: string;
+  /** Bans de brawlers por equipo y por partida (0 = sin bans). */
+  bansPerTeam: number;
   mapPool: Types.ObjectId[];
   roundPlans: PlannedGame[][];
   totalRounds: number;
@@ -158,6 +164,9 @@ const tournamentSchema = defineSchema<TournamentDoc>(
     rules: { type: String, default: "" },
     /** Afiche del torneo (URL o ruta como /img/afiche-pixel.webp). */
     posterUrl: { type: String, default: "" },
+    prize: { type: String, default: "" },
+    location: { type: String, default: "" },
+    bansPerTeam: { type: Number, default: 0, min: 0, max: 3 },
     mapPool: [{ type: ObjectId, ref: "GameMap" }],
     /** Plan de modo/mapa por ronda: roundPlans[i] = games de la ronda i+1. */
     roundPlans: { type: [[plannedGameSchema]], default: [] },
@@ -317,6 +326,22 @@ const reportSchema = defineSchema<ReportDoc>(
   { _id: false },
 );
 
+/** Bans de brawlers de un equipo para toda la partida (se envían a ciegas). */
+export interface BanDoc {
+  team: Types.ObjectId;
+  brawlers: string[];
+  createdAt: Date;
+}
+
+const banSchema = defineSchema<BanDoc>(
+  {
+    team: { type: ObjectId, ref: "Team", required: true },
+    brawlers: { type: [String], default: [] },
+    createdAt: { type: Date, default: Date.now },
+  },
+  { _id: false },
+);
+
 export interface SeriesDoc {
   _id: Types.ObjectId;
   tournament: Types.ObjectId;
@@ -338,6 +363,7 @@ export interface SeriesDoc {
   games: GameDoc[];
   /** Resultados reportados por los equipos; el árbitro los confirma. */
   reports: ReportDoc[];
+  bans: BanDoc[];
   scheduledAt: Date | null;
   notes: string;
   createdAt: Date;
@@ -364,6 +390,7 @@ const seriesSchema = defineSchema<SeriesDoc>(
     nextSlot: { type: String, enum: ["A", "B", null], default: null },
     games: { type: [gameSchema], default: [] },
     reports: { type: [reportSchema], default: [] },
+    bans: { type: [banSchema], default: [] },
     scheduledAt: { type: Date, default: null },
     notes: { type: String, default: "" },
   },

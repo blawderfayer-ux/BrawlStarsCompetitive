@@ -73,7 +73,7 @@ export function EventToasts({ slug, seconds = 12 }: { slug: string; seconds?: nu
           key={t.id}
           type="button"
           onClick={() => setToasts((all) => all.filter((x) => x.id !== t.id))}
-          className="toast pointer-events-auto w-full max-w-md rounded-2xl border-[2.5px] border-ink bg-card-hi px-4 py-3 text-left text-sm font-extrabold shadow-[0_5px_0_var(--ink)]"
+          className="toast pointer-events-auto w-full max-w-md rounded-xl border border-line bg-card-hi px-4 py-3 text-left text-sm font-extrabold"
         >
           <Bell size={16} className="mr-1.5 inline text-brand" /> {t.message}
         </button>

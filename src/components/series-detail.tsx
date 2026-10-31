@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import type { SeriesView } from "@/lib/views";
@@ -18,19 +17,19 @@ export function GamesList({ series }: { series: SeriesView }) {
           <li
             key={g.number}
             className={cn(
-              "flex items-center gap-3 rounded-2xl border-[2.5px] border-ink p-2.5 shadow-[0_3px_0_var(--ink)]",
-              isCurrent && isLive ? "bg-red/25" : isCurrent ? "bg-brand/15" : "bg-card",
+              "flex items-center gap-3 rounded-xl border border-line p-2.5",
+              isCurrent && isLive ? "bg-red/10 ring-1 ring-live/50" : isCurrent ? "bg-brand/[0.07]" : "bg-card",
               g.status === "skipped" && "opacity-45",
             )}
           >
-            <div className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-xl border-2 border-ink bg-bg-soft">
-              <span className="text-[9px] font-black uppercase leading-none text-muted">Game</span>
-              <span className="title-ink text-2xl leading-none">{g.number}</span>
+            <div className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-lg border border-line bg-bg-soft">
+              <span className="font-display text-[9px] uppercase leading-none tracking-wider text-muted">Game</span>
+              <span className="font-display text-2xl leading-none">{g.number}</span>
             </div>
             <div className="min-w-0 flex-1">
               <ModeMapChip mode={g.mode} map={g.map} size="sm" />
             </div>
-            <div className="shrink-0 text-right text-[11px] font-black uppercase">
+            <div className="font-display shrink-0 text-right text-xs uppercase tracking-wide">
               {g.status === "finished" && winner ? (
                 <span className="flex items-center gap-1.5 text-brand">
                   <TeamLogo team={winner} size={24} className="!rounded-md" />
@@ -55,39 +54,38 @@ export function GamesList({ series }: { series: SeriesView }) {
   );
 }
 
-/** Bloque grande de "PARTIDA EN CURSO": equipos, marcador y mapa actual bien visibles. */
+/** Marcador grande de "EN VIVO", como la gráfica de una transmisión. */
 export function LiveSeriesHero({ series, slug }: { series: SeriesView; slug: string }) {
   const game = currentGameOf(series);
   return (
-    <Link href={`/torneos/${slug}/partidas/${series.number}`} className="card relative isolate block overflow-hidden">
-      <Image src="/img/vs.webp" alt="" fill sizes="(max-width: 640px) 100vw, 640px" className="-z-20 object-cover opacity-30" />
-      <div className="halftone absolute inset-0 -z-10" aria-hidden />
-      <div className="flex items-center justify-between border-b-[2.5px] border-ink bg-red px-4 py-2">
-        <span className="font-display flex items-center gap-2 text-sm uppercase text-white">
-          <span className="live-dot !bg-white" aria-hidden /> Partida en curso
+    <Link href={`/torneos/${slug}/partidas/${series.number}`} className="card relative isolate block overflow-hidden ring-1 ring-live">
+      <div className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,#3b82f622,transparent_35%,transparent_65%,#f43f5e22)]" aria-hidden />
+      <div className="flex items-center justify-between gap-2 border-b border-line bg-bg-soft px-4 py-2">
+        <span className="font-display flex items-center gap-2 text-sm uppercase tracking-wider text-rose-300">
+          <span className="live-dot" aria-hidden /> En vivo
         </span>
-        <span className="font-display text-sm uppercase text-white/85">
-          #{series.number} · {series.roundName} · BO{series.bestOf}
+        <span className="font-display truncate text-sm uppercase tracking-wider text-muted">
+          Partida {series.number} · {series.roundName} · BO{series.bestOf}
         </span>
       </div>
-      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 px-3 py-5">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 px-4 py-5">
         <div className="flex min-w-0 flex-col items-center gap-2 text-center">
-          <TeamLogo team={series.teamA} size={60} className="ring-4 ring-blue" />
-          <span className="font-display w-full truncate text-lg">{series.teamA?.name}</span>
+          <TeamLogo team={series.teamA} size={56} className="ring-2 ring-blue" />
+          <span className="font-display w-full truncate text-lg uppercase">{series.teamA?.name}</span>
         </div>
-        <div className="title-ink text-center text-5xl leading-none">
-          <span className="text-blue">{series.scoreA}</span>
-          <span className="mx-1 text-white">-</span>
-          <span className="text-red">{series.scoreB}</span>
+        <div className="font-display flex items-center gap-2 text-5xl leading-none tabular-nums">
+          <span className={series.scoreA > series.scoreB ? "text-brand" : "text-text"}>{series.scoreA}</span>
+          <span className="text-2xl text-muted">:</span>
+          <span className={series.scoreB > series.scoreA ? "text-brand" : "text-text"}>{series.scoreB}</span>
         </div>
         <div className="flex min-w-0 flex-col items-center gap-2 text-center">
-          <TeamLogo team={series.teamB} size={60} className="ring-4 ring-red" />
-          <span className="font-display w-full truncate text-lg">{series.teamB?.name}</span>
+          <TeamLogo team={series.teamB} size={56} className="ring-2 ring-red" />
+          <span className="font-display w-full truncate text-lg uppercase">{series.teamB?.name}</span>
         </div>
       </div>
       {game ? (
-        <div className="border-t-[2.5px] border-ink bg-bg-soft/90 px-4 py-3">
-          <div className="mb-2 text-[11px] font-black uppercase tracking-wider text-muted">Mapa actual · Game {game.number}</div>
+        <div className="border-t border-line bg-bg-soft/80 px-4 py-3">
+          <div className="eyebrow mb-2">Mapa actual · Game {game.number}</div>
           <ModeMapChip mode={game.mode} map={game.map} size="lg" />
         </div>
       ) : null}

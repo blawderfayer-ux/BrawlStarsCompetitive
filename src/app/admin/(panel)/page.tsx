@@ -16,7 +16,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
   return (
     <div className="space-y-6">
       {error === "permiso" ? (
-        <p className="rounded-xl bg-red-500/15 px-4 py-3 text-sm font-bold text-red-300">
+        <p className="rounded-lg bg-red-500/15 px-4 py-3 text-sm font-bold text-red-300">
           Esa sección es solo para administradores.
         </p>
       ) : null}
